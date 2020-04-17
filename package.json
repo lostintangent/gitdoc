@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "VS Code extension that allows you to edit a Git repo, like it's a multi-file, versioned document.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/vsls-contrib/gitdoc.git"

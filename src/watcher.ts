@@ -3,18 +3,26 @@ import * as vscode from "vscode";
 import config from "./config";
 import { GitAPI, Repository } from "./git";
 import moment = require("moment");
+import { store } from "./store/store";
+import { reaction } from "mobx";
+
+async function pushRepository(repository: Repository) {
+  store.isPushing = true;
+  await repository.push("origin", repository.state.HEAD?.name);
+  store.isPushing = false;
+}
 
 const commitMap = new Map();
 function debouncedCommit(repository: Repository) {
   if (!commitMap.has(repository)) {
     commitMap.set(
       repository,
-      debounce(() => {
+      debounce(async () => {
         const message = moment().format(config.commitMessageFormat);
-        repository.commit(message, { all: true });
+        await repository.commit(message, { all: true });
 
         if (config.autoPush === "onSave") {
-          repository.push();
+          await pushRepository(repository);
         }
       }, 100)
     );
@@ -59,8 +67,8 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   });
 
   if (config.autoPush === "afterDelay") {
-    const interval = setInterval(() => {
-      git.repositories[0].push();
+    const interval = setInterval(async () => {
+      pushRepository(git.repositories[0]);
     }, config.autoPushDelay);
 
     disposables.push({
@@ -69,6 +77,18 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
       },
     });
   }
+
+  const reactionDisposable = reaction(
+    () => [store.isPushing],
+    () => {
+      const suffix = store.isPushing ? " (Syncing...)" : "";
+      statusBarItem!.text = `$(git-commit) GitDoc${suffix}`;
+    }
+  );
+
+  disposables.push({
+    dispose: reactionDisposable,
+  });
 
   return {
     dispose: () => {

@@ -36,22 +36,21 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 }
 
-let watcher: vscode.Disposable;
+let watcher: vscode.Disposable | null;
 async function checkEnabled(git: GitAPI) {
-  if (
+  if (watcher) {
+    watcher.dispose();
+    watcher = null;
+  }
+
+  const enabled =
     git.repositories.length > 0 &&
-    (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME)
-  ) {
-    updateContext(true);
-    setBranchEnabledContext(config.enabled);
+    (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME);
 
+  updateContext(enabled);
+  setBranchEnabledContext(config.enabled);
+
+  if (enabled) {
     watcher = watchForChanges(git);
-  } else {
-    updateContext(false);
-    setBranchEnabledContext(config.enabled);
-
-    if (watcher) {
-      watcher.dispose();
-    }
   }
 }
