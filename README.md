@@ -1,6 +1,6 @@
 # GitDoc 📄
 
-GitDoc is a Visual Studio Code extension that allows you to edit git repos, like they're a multi-file, versioned document. This gives you the simpliciy of a Google Doc or Word Document ("snapshot" changes by saving, not by running `git commit`), but with the richness of git history, and the ability to easily share your work (via GitHub, Azure DevOps, etc.). You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of change) or on specific branches (e.g. you have a `docs` repo that you want to version like a document), which allows you to easily switch between "versioning modalities" (auto-commit vs. manual commits). Additionally, you can opt into auto-pushing your changes to a remote, in order to treat your repo as a fully saved/synchronized document source.
+GitDoc is a Visual Studio Code extension that allows you to edit git repos, like they're a multi-file, versioned document. This gives you the simplicity of a Google Doc or Word Document ("snapshot" changes by saving, not by running `git commit`), but with the richness of git history, and the ability to easily share your work (via GitHub, Azure DevOps, etc.). You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of change) or on specific branches (e.g. you have a `docs` repo that you want to version like a document), which allows you to easily switch between "versioning modalities" (auto-commit vs. manual commits). Additionally, you can opt into auto-pushing your changes to a remote, in order to treat your repo as a fully synchronized document source.
 
 <img width="700px" src="https://user-images.githubusercontent.com/116461/79521572-5a3bfe00-800e-11ea-83a0-8e125122fa8f.gif" />
 
@@ -38,8 +38,7 @@ When you install the `GitDoc` extension, the following commands are contributed 
 
 - `GitDoc: Disabled` - Disables auto-commits. If auto-commits were enabled on this branch, then runnning this command only temporarily disables it, and it will be re-enabled when you reload/re-open VS Code. This is useful if you have a branch that you generally want to auto-commit on, but you want to turn it off for a certain period/editing session. This command is only visible when GitDoc is already enabled.
 
-- `GitDoc: Disabled (Branch)` - Disables auto-commits
-- on the current branch. This command is only visible when GitDoc is already enabled for the current branch.
+- `GitDoc: Disabled (Branch)` - Disables auto-commits on the current branch. This command is only visible when GitDoc is already enabled for the current branch.
 
 ## Contributed Settings
 
