@@ -4,8 +4,10 @@ import { registerCommands } from "./commands";
 import config from "./config";
 import { EXTENSION_NAME } from "./constants";
 import { getGitApi, GitAPI } from "./git";
-import { store } from "./store";
+import { store } from "./store/store";
 import { watchForChanges } from "./watcher";
+import { setBranchEnabledContext } from "./utils";
+import { updateContext } from "./store/actions";
 
 export async function activate(context: vscode.ExtensionContext) {
   const git = await getGitApi();
@@ -17,30 +19,12 @@ export async function activate(context: vscode.ExtensionContext) {
 
   registerCommands(context);
 
-  context.subscriptions.push(
-    git.onDidOpenRepository((e) => {
-      checkEnabled(git);
+  context.subscriptions.push(git.onDidOpenRepository(() => checkEnabled(git)));
+  context.subscriptions.push(git.onDidCloseRepository(() => checkEnabled(git)));
 
-      let lastBranch: string;
-      context.subscriptions.push(
-        e.state.onDidChange(() => {
-          if (
-            lastBranch &&
-            lastBranch.localeCompare(git.repositories[0].state.HEAD?.name!) !==
-              0
-          ) {
-            lastBranch = git.repositories[0].state.HEAD?.name!;
-            checkEnabled(git);
-          }
-        })
-      );
-    })
-  );
-
-  context.subscriptions.push(
-    git.onDidCloseRepository(() => {
-      checkEnabled(git);
-    })
+  reaction(
+    () => [store.enabled],
+    () => checkEnabled(git)
   );
 
   context.subscriptions.push(
@@ -50,13 +34,6 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     })
   );
-
-  reaction(
-    () => [store.enabled],
-    () => {
-      checkEnabled(git);
-    }
-  );
 }
 
 let watcher: vscode.Disposable;
@@ -65,23 +42,13 @@ async function checkEnabled(git: GitAPI) {
     git.repositories.length > 0 &&
     (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME)
   ) {
-    store.enabled = true;
-    vscode.commands.executeCommand("setContext", "gitdoc:enabled", true);
-    vscode.commands.executeCommand(
-      "setContext",
-      "gitdoc:branchEnabled",
-      config.enabled
-    );
+    updateContext(true);
+    setBranchEnabledContext(config.enabled);
 
     watcher = watchForChanges(git);
   } else {
-    store.enabled = false;
-    vscode.commands.executeCommand("setContext", "gitdoc:enabled", false);
-    vscode.commands.executeCommand(
-      "setContext",
-      "gitdoc:branchEnabled",
-      config.enabled
-    );
+    updateContext(false);
+    setBranchEnabledContext(config.enabled);
 
     if (watcher) {
       watcher.dispose();
