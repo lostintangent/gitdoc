@@ -23,8 +23,17 @@ function debouncedCommit(repository: Repository) {
     commitMap.set(
       repository,
       debounce(async () => {
-        const message = moment().format(config.commitMessageFormat);
+        const momentInstance = moment();
+        const message = momentInstance.format(config.commitMessageFormat);
+        const date = momentInstance.format();
+
+        process.env.GIT_AUTHOR_DATE = date;
+        process.env.GIT_COMMITTER_DATE = date;
+
         await repository.commit(message);
+
+        delete process.env.GIT_AUTHOR_DATE;
+        delete process.env.GIT_COMMITTER_DATE;
 
         if (config.autoPush === "onSave") {
           await pushRepository(repository);
