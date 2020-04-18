@@ -13,4 +13,8 @@ export function registerCommands(context: vscode.ExtensionContext) {
   registerCommand("enableBranch", updateContext.bind(null, true, true));
   registerCommand("disable", updateContext.bind(null, false));
   registerCommand("disableBranch", updateContext.bind(null, false, true));
+
+  registerCommand("squash", (item: any) => {
+    console.log("GD: Item: %o", item.ref);
+  });
 }

@@ -40,6 +40,11 @@
         "command": "gitdoc.enableBranch",
         "title": "Enable (Branch)",
         "category": "GitDoc"
+      },
+      {
+        "command": "gitdoc.squash",
+        "title": "Squash from here",
+        "category": "GitDoc"
       }
     ],
     "configuration": {
@@ -94,6 +99,17 @@
         {
           "command": "gitdoc.enableBranch",
           "when": "gitOpenRepositoryCount != 0 && !gitdoc:branchEnabled"
+        },
+        {
+          "command": "gitdoc.squash",
+          "when": "false"
+        }
+      ],
+      "timeline/item/context": [
+        {
+          "command": "gitdoc.squash",
+          "when": "timelineItem =~ /git/",
+          "group": "gitdoc@1"
         }
       ]
     }
