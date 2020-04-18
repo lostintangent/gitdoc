@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "VS Code extension that allows you to edit a Git repo, like it's a multi-file, versioned document.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "repository": {
     "type": "git",
     "url": "https://github.com/vsls-contrib/gitdoc.git"
@@ -69,6 +69,11 @@
           "type": "boolean",
           "default": false,
           "description": "Specifies whether to automatically create a commit each time you save a file."
+        },
+        "gitdoc.filePattern": {
+          "type": "string",
+          "default": "**/*",
+          "description": "Specifies a glob that indicates the specific files that should be automatically committed."
         }
       }
     },
@@ -97,8 +102,7 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install",
-    "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "devDependencies": {
     "typescript": "^3.1.4",
@@ -108,8 +112,10 @@
   },
   "dependencies": {
     "@types/debounce": "^1.2.0",
+    "@types/minimatch": "^3.0.3",
     "@types/moment": "^2.13.0",
     "debounce": "^1.2.0",
+    "minimatch": "^3.0.4",
     "mobx": "^5.14.2",
     "moment": "^2.24.0"
   }

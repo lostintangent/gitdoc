@@ -5,11 +5,16 @@ import { GitAPI, Repository } from "./git";
 import moment = require("moment");
 import { store } from "./store/store";
 import { reaction } from "mobx";
+import * as minimatch from "minimatch";
 
 async function pushRepository(repository: Repository) {
   store.isPushing = true;
   await repository.push("origin", repository.state.HEAD?.name);
   store.isPushing = false;
+}
+
+function matches(uri: vscode.Uri) {
+  return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
 const commitMap = new Map();
@@ -19,7 +24,7 @@ function debouncedCommit(repository: Repository) {
       repository,
       debounce(async () => {
         const message = moment().format(config.commitMessageFormat);
-        await repository.commit(message, { all: true });
+        await repository.commit(message);
 
         if (config.autoPush === "onSave") {
           await pushRepository(repository);
@@ -50,14 +55,41 @@ export function ensureStatusBarItem() {
 let disposables: vscode.Disposable[] = [];
 export function watchForChanges(git: GitAPI): vscode.Disposable {
   disposables.push(
-    git.repositories[0].state.onDidChange(() => {
+    git.repositories[0].state.onDidChange(async () => {
       if (git.repositories[0].state.workingTreeChanges?.length > 0) {
-        debouncedCommit(git.repositories[0])();
+        const changes = git.repositories[0].state.workingTreeChanges
+          .filter((change) => matches(change.uri))
+          .map((change) => change.uri);
+
+        if (changes.length > 0) {
+          // @ts-ignore
+          await git.repositories[0]._repository.add(changes);
+          debouncedCommit(git.repositories[0])();
+        }
       }
     })
   );
 
   ensureStatusBarItem();
+
+  disposables.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor && matches(editor.document.uri)) {
+        statusBarItem?.show();
+      } else {
+        statusBarItem?.hide();
+      }
+    })
+  );
+
+  if (
+    vscode.window.activeTextEditor &&
+    matches(vscode.window.activeTextEditor.document.uri)
+  ) {
+    statusBarItem?.show();
+  } else {
+    statusBarItem?.hide();
+  }
 
   disposables.push({
     dispose: () => {

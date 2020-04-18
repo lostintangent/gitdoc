@@ -1,18 +1,20 @@
 # GitDoc 📄
 
-GitDoc is a Visual Studio Code extension that allows you to edit git repos like they're a multi-file, versioned document. This gives you the simplicity of a Google/Word Doc (creating "snapshots" by saving, not by running `git commit`), but with the richness of git history, and the ability to easily share your work (via GitHub, Azure DevOps, etc.). You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of a change) or on specific branches (e.g. you have a `docs` repo that you want to version like a document), which allows you to easily switch between "versioning modalities" (auto-commit vs. manual commits). Additionally, you can opt into auto-pushing your changes to a remote, in order to treat your repo as a fully synchronized document source.
+GitDoc is a Visual Studio Code extension that allows you to edit git repos like they're a multi-file, versioned document. This gives you the simplicity of a Google/Word Doc (creating "snapshots" by saving, not by running `git commit`), but with the richness of git history, and the ability to easily [share](https://github.com) your work. You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of a change), permanently on [specific branches](#auto-commiting-specific-branches) (e.g. you have a `docs` repo that you want to version like a document), or only for [specific files](#auto-commiting-specific-files) (e.g. auto-commmit `*.md` files, but nothing else), which allows you to easily switch between "versioning modalities". Additionally, you can opt into [auto-pushing](#auto-pushing) your changes to a remote, in order to treat your repo as a fully synchronized document source.
 
 <img width="700px" src="https://user-images.githubusercontent.com/116461/79521572-5a3bfe00-800e-11ea-83a0-8e125122fa8f.gif" />
 
 ## Getting Started
 
 1. Install this extension
-1. Run the `GitDoc: Enable` command. Notice that your status bar will now include a `GitDoc` button, which indicates that `GitDoc` is enabled.
-1. Open a file, make a change, and then save it
-1. Open the `Timeline` view on the `Explorer` tab and notice that a new commit was created for the change you just saved
-1. Select the top item in the `Timeline` view to see the diff of the change you just made
-1. Continue to make changes, knowing that they'll be automatically tracked
-1. When you're done, simply click the `GitDoc` button in your status bar, run the `GitDoc: Disable` command, or close/reload VS Code
+2. Run the `GitDoc: Enable` command, and notice that your status bar now includes a `GitDoc` button. This indicates that `GitDoc` is enabled 🚀
+3. Open a file, make a change, and then save it
+4. Open the `Timeline` view on the `Explorer` tab (or run `git log`) and notice that a new commit was created for the change you just saved
+5. Select the top item in the `Timeline` view to see the diff of the change you just made
+6. Continue to make changes, knowing that they'll be automatically tracked 👍
+7. When you're done, simply click the `GitDoc` button in your status bar, run the `GitDoc: Disable` command, or close/reload VS Code
+
+From here, you can permanently enable auto-commits for an entire repo or [branch](#auto-commiting-specific-branches), customize the [files that are auto-committed](#auto-commiting-specific-files), and even [auto-push your changes](#auto-pushing) in order to keep your repo fully synced.
 
 ## Auto-pushing
 
@@ -27,6 +29,12 @@ If you'd like to automatically track your changes, without needing to explicitly
 ## Auto-commiting specific branches
 
 In addition to enabling `GitDoc` during temporary periods, you can also choose to enable it on specific branches, in order to automatically track your work for as long as you're using the branch. Simply switch to the desired branch and run `GitDoc: Enable (Branch)`.
+
+## Auto-commiting specific files
+
+If you'd like to only enable auto-commiting for specific files, you can set the `GitDoc: File Pattern` setting to a file glob. For example, you could set this to `**/*.md` in order to auto-commit markdown files, but nothing else. By default, this is set to `**/*`, which auto-commits changes to any file.
+
+When this setting is set, the `GitDoc` [status bar](#status-bar) which only appear when you have a file that is matches it. This way, you can easily tell when you're editing a file that will be auto-committed/pushed.
 
 ## Status Bar
 
@@ -57,3 +65,5 @@ The following settings enable youn
 - `GitDoc: Commit Message Format` - Specifies the [moment.js](https://momentjs.com/) format string to use when generating auto-commit messages. Defaults to `LLL`.
 
 - `GitDoc: Enabled` - Specifies whether to automatically create a commit each time you save a file.
+
+- `GitDoc: File Pattern` - Specifies a glob that indicates the exact files that should be automatically committed. This is useful if you'd like to only [auto-commiting specific files](#auto-commiting-specific-files), as opposed to an entire branch.

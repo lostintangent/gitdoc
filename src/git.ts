@@ -11,8 +11,12 @@ interface Branch {
 interface RepositoryState {
   HEAD: Branch | undefined | null;
   refs: Branch[];
-  workingTreeChanges: any[];
+  workingTreeChanges: Change[];
   onDidChange: vscode.Event<void>;
+}
+
+export interface Change {
+  readonly uri: vscode.Uri;
 }
 
 export interface Repository {

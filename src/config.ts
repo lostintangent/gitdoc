@@ -24,4 +24,7 @@ export default {
   set enabled(value: boolean) {
     config().update(ENABLED_KEY, value, vscode.ConfigurationTarget.Workspace);
   },
+  get filePattern() {
+    return config().get("filePattern", "**/*");
+  },
 };
