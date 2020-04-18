@@ -7,14 +7,25 @@ GitDoc is a Visual Studio Code extension that allows you to edit git repos like 
 ## Getting Started
 
 1. Install this extension
-2. Run the `GitDoc: Enable` command, and notice that your status bar now includes a `GitDoc` button. This indicates that `GitDoc` is enabled 🚀
-3. Open a file, make a change, and then save it
-4. Open the `Timeline` view on the `Explorer` tab (or run `git log`) and notice that a new commit was created for the change you just saved
-5. Select the top item in the `Timeline` view to see the diff of the change you just made
-6. Continue to make changes, knowing that they'll be automatically tracked 👍
-7. When you're done, simply click the `GitDoc` button in your status bar, run the `GitDoc: Disable` command, or close/reload VS Code
+1. Run the `GitDoc: Enable` command, and notice that your status bar now includes a `GitDoc` button. This indicates that `GitDoc` is enabled 🚀
+1. Open a file, make a change, and then save it
+1. Open the `Timeline` view on the `Explorer` tab (or run `git log`) and notice that a new commit was created for the change you just saved
+1. Select the top item in the `Timeline` view to see the diff of the change you just made
+1. Continue to make changes, knowing that they'll be automatically tracked 👍
+1. At any time, you can [restore](#restoring-versions) and [collapse](#collapsing-versions) versions, in order to "clean" up your history
+1. When you're done, simply click the `GitDoc` button in your status bar, run the `GitDoc: Disable` command, or close/reload VS Code
 
 From here, you can permanently enable auto-commits for an entire repo or [branch](#auto-commiting-specific-branches), customize the [files that are auto-committed](#auto-commiting-specific-files), and even [auto-push your changes](#auto-pushing) in order to keep your repo fully synced.
+
+## Collapsing versions
+
+Auto-committing is useful for tracking unique versions, however, depending on how frequently you save, you could end up creating a significant number of file versions. If a series of versions represent a single logical change, you can collapse them together by right-clicking the oldest version in the `Timeline` tree and selecting the `Collapse Version(s) Above` command. You can give the new version a name, and when submitted, the selected version, and all versions above it, will be collapsed into a single version.
+
+<img width="700px" src="https://user-images.githubusercontent.com/116461/79668805-3c84ab00-816c-11ea-9ec9-845650b999b8.gif" />
+
+## Restoring versions
+
+If you've made a bunch of changes to a file, and want to restore an older version, simply open up the `Timeline` tree, right-click the desired version, and select `Restore Version`.
 
 ## Auto-pushing
 

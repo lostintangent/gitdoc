@@ -17,28 +17,30 @@ function matches(uri: vscode.Uri) {
   return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
+export async function commit(repository: Repository) {
+  const momentInstance = moment();
+  const message = momentInstance.format(config.commitMessageFormat);
+  const date = momentInstance.format();
+
+  process.env.GIT_AUTHOR_DATE = date;
+  process.env.GIT_COMMITTER_DATE = date;
+
+  await repository.commit(message);
+
+  delete process.env.GIT_AUTHOR_DATE;
+  delete process.env.GIT_COMMITTER_DATE;
+
+  if (config.autoPush === "onSave") {
+    await pushRepository(repository);
+  }
+}
+
 const commitMap = new Map();
 function debouncedCommit(repository: Repository) {
   if (!commitMap.has(repository)) {
     commitMap.set(
       repository,
-      debounce(async () => {
-        const momentInstance = moment();
-        const message = momentInstance.format(config.commitMessageFormat);
-        const date = momentInstance.format();
-
-        process.env.GIT_AUTHOR_DATE = date;
-        process.env.GIT_COMMITTER_DATE = date;
-
-        await repository.commit(message);
-
-        delete process.env.GIT_AUTHOR_DATE;
-        delete process.env.GIT_COMMITTER_DATE;
-
-        if (config.autoPush === "onSave") {
-          await pushRepository(repository);
-        }
-      }, 100)
+      debounce(async () => commit(repository), 100)
     );
   }
 

@@ -1,3 +1,8 @@
+## v0.0.4 (04/18/2020)
+
+- Introduced the `Collapse Version(s) Above` command to the `Timeline` tree, which allows you to merge/name a bunch of auto-commits into a single version
+- Introduced the `Restore Version` command to the `Timeline` tree, which allows you to restore a previous version of a file
+
 ## v0.0.3 (04/18/2020)
 
 - Added the `GitDoc: File Pattern` setting, which allows you to enable auto-commits on only specific files
