@@ -3,13 +3,26 @@ import * as vscode from "vscode";
 import config from "./config";
 import { GitAPI, Repository } from "./git";
 import moment = require("moment");
-import { store } from "./store/store";
+import { store } from "./store";
 import { reaction } from "mobx";
 import * as minimatch from "minimatch";
 
+export enum ForcePushMode {
+  Force,
+  ForceWithLease,
+}
+
 async function pushRepository(repository: Repository) {
   store.isPushing = true;
-  await repository.push("origin", repository.state.HEAD?.name);
+
+  // @ts-ignore
+  await repository._repository.pushTo(
+    "origin",
+    repository.state.HEAD?.name,
+    false,
+    ForcePushMode.Force
+  );
+
   store.isPushing = false;
 }
 
@@ -17,21 +30,38 @@ function matches(uri: vscode.Uri) {
   return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
-export async function commit(repository: Repository) {
-  const momentInstance = moment();
-  const message = momentInstance.format(config.commitMessageFormat);
-  const date = momentInstance.format();
+export async function commit(repository: Repository, message?: string) {
+  const changes = [
+    ...repository.state.workingTreeChanges,
+    ...repository.state.mergeChanges,
+    ...repository.state.indexChanges,
+  ];
 
-  process.env.GIT_AUTHOR_DATE = date;
-  process.env.GIT_COMMITTER_DATE = date;
+  if (changes.length > 0) {
+    const changedUris = changes
+      .filter((change) => matches(change.uri))
+      .map((change) => change.uri);
 
-  await repository.commit(message);
+    if (changedUris.length > 0) {
+      // @ts-ignore
+      await repository._repository.add(changedUris);
+      const momentInstance = moment();
+      const commitMessage =
+        message || momentInstance.format(config.commitMessageFormat);
+      const date = momentInstance.format();
 
-  delete process.env.GIT_AUTHOR_DATE;
-  delete process.env.GIT_COMMITTER_DATE;
+      process.env.GIT_AUTHOR_DATE = date;
+      process.env.GIT_COMMITTER_DATE = date;
 
-  if (config.autoPush === "onSave") {
-    await pushRepository(repository);
+      await repository.commit(commitMessage);
+
+      delete process.env.GIT_AUTHOR_DATE;
+      delete process.env.GIT_COMMITTER_DATE;
+
+      if (config.autoPush === "onCommit") {
+        await pushRepository(repository);
+      }
+    }
   }
 }
 
@@ -40,7 +70,9 @@ function debouncedCommit(repository: Repository) {
   if (!commitMap.has(repository)) {
     commitMap.set(
       repository,
-      debounce(async () => commit(repository), 100)
+      debounce(async () => {
+        commit(repository);
+      }, config.autoCommitDelay)
     );
   }
 
@@ -65,21 +97,8 @@ export function ensureStatusBarItem() {
 
 let disposables: vscode.Disposable[] = [];
 export function watchForChanges(git: GitAPI): vscode.Disposable {
-  disposables.push(
-    git.repositories[0].state.onDidChange(async () => {
-      if (git.repositories[0].state.workingTreeChanges?.length > 0) {
-        const changes = git.repositories[0].state.workingTreeChanges
-          .filter((change) => matches(change.uri))
-          .map((change) => change.uri);
-
-        if (changes.length > 0) {
-          // @ts-ignore
-          await git.repositories[0]._repository.add(changes);
-          debouncedCommit(git.repositories[0])();
-        }
-      }
-    })
-  );
+  const commitAfterDelay = debouncedCommit(git.repositories[0]);
+  disposables.push(git.repositories[0].state.onDidChange(commitAfterDelay));
 
   ensureStatusBarItem();
 
@@ -124,7 +143,7 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   const reactionDisposable = reaction(
     () => [store.isPushing],
     () => {
-      const suffix = store.isPushing ? " (Syncing...)" : "";
+      const suffix = store.isPushing ? " (Pushing...)" : "";
       statusBarItem!.text = `$(git-commit) GitDoc${suffix}`;
     }
   );

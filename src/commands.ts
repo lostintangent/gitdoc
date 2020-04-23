@@ -1,8 +1,14 @@
 import * as vscode from "vscode";
 import { EXTENSION_NAME } from "./constants";
-import { updateContext } from "./store/actions";
 import { getGitApi } from "./git";
+import { updateContext } from "./utils";
 import { commit } from "./watcher";
+
+interface GitTimelineItem {
+  message: string;
+  ref: string;
+  previousRef: string;
+}
 
 export function registerCommands(context: vscode.ExtensionContext) {
   function registerCommand(name: string, callback: (...args: any[]) => any) {
@@ -16,7 +22,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
   registerCommand("disable", updateContext.bind(null, false));
   registerCommand("disableBranch", updateContext.bind(null, false, true));
 
-  registerCommand("restoreVersion", async (item: any) => {
+  registerCommand("restoreVersion", async (item: GitTimelineItem) => {
     if (!vscode.window.activeTextEditor) {
       return;
     }
@@ -26,6 +32,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
     );
 
     const git = await getGitApi();
+
     // @ts-ignore
     await git?.repositories[0]._repository.repository.checkout(item.ref, [
       path,
@@ -36,9 +43,9 @@ export function registerCommands(context: vscode.ExtensionContext) {
     commit(git?.repositories[0]!);
   });
 
-  registerCommand("collapseVersions", async (item: any) => {
+  registerCommand("squashVersions", async (item: GitTimelineItem) => {
     const message = await vscode.window.showInputBox({
-      prompt: "Enter the name to give to the collapsed version",
+      prompt: "Enter the name to give to the new squashed version",
       value: item.message,
     });
 
@@ -46,7 +53,20 @@ export function registerCommands(context: vscode.ExtensionContext) {
       const git = await getGitApi();
       // @ts-ignore
       await git?.repositories[0]._repository.reset(`${item.ref}~1`);
-      await git?.repositories[0].commit(message);
+      await commit(git?.repositories[0]!, message);
     }
+  });
+
+  registerCommand("undoVersion", async (item: GitTimelineItem) => {
+    const git = await getGitApi();
+
+    // @ts-ignore
+    await git?.repositories[0]._repository.repository.run([
+      "revert",
+      "-n", // Tell Git not to create a commit, so that we can make one with the right message format
+      item.ref,
+    ]);
+
+    await commit(git?.repositories[0]!);
   });
 }

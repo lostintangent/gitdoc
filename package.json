@@ -4,7 +4,10 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "VS Code extension that allows you to edit a Git repo, like it's a multi-file, versioned document.",
-  "version": "0.0.4",
+  "version": "0.0.5",
+  "extensionKind": [
+    "workspace"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/vsls-contrib/gitdoc.git"
@@ -42,24 +45,31 @@
         "category": "GitDoc"
       },
       {
-        "command": "gitdoc.collapseVersions",
-        "title": "Collapse Version(s) Above",
-        "category": "GitDoc"
+        "command": "gitdoc.restoreVersion",
+        "title": "Restore Version"
       },
       {
-        "command": "gitdoc.restoreVersion",
-        "title": "Restore Version",
-        "category": "GitDoc"
+        "command": "gitdoc.squashVersions",
+        "title": "Squash Version(s) Above"
+      },
+      {
+        "command": "gitdoc.undoVersion",
+        "title": "Undo Version"
       }
     ],
     "configuration": {
       "title": "GitDoc",
       "properties": {
+        "gitdoc.autoCommitDelay": {
+          "type": "number",
+          "default": 30000,
+          "description": "Controls the delay in ms after which any changes are automatically committed. Only applies when `GitDoc: Enabled` is set to `true`."
+        },
         "gitdoc.autoPush": {
           "type": "string",
           "enum": [
             "afterDelay",
-            "onSave",
+            "onCommit",
             "off"
           ],
           "default": "off",
@@ -106,11 +116,15 @@
           "when": "gitOpenRepositoryCount != 0 && !gitdoc:branchEnabled"
         },
         {
-          "command": "gitdoc.collapseVersions",
+          "command": "gitdoc.restoreVersion",
           "when": "false"
         },
         {
-          "command": "gitdoc.restoreVersion",
+          "command": "gitdoc.squashVersions",
+          "when": "false"
+        },
+        {
+          "command": "gitdoc.undoVersion",
           "when": "false"
         }
       ],
@@ -121,9 +135,14 @@
           "group": "gitdoc@1"
         },
         {
-          "command": "gitdoc.collapseVersions",
+          "command": "gitdoc.undoVersion",
           "when": "gitdoc:enabled && timelineItem =~ /git:file:commit\\b/",
           "group": "gitdoc@2"
+        },
+        {
+          "command": "gitdoc.squashVersions",
+          "when": "gitdoc:enabled && timelineItem =~ /git:file:commit\\b/",
+          "group": "gitdoc@3"
         }
       ]
     }

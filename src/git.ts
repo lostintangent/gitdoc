@@ -12,6 +12,8 @@ interface RepositoryState {
   HEAD: Branch | undefined | null;
   refs: Branch[];
   workingTreeChanges: Change[];
+  indexChanges: Change[];
+  mergeChanges: Change[];
   onDidChange: vscode.Event<void>;
 }
 
