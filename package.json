@@ -85,6 +85,16 @@
           "default": "LLL",
           "description": "Specifies the moment.js format string to use when generating auto-commit messages."
         },
+        "gitdoc.commitValidationLevel": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning",
+            "none"
+          ],
+          "default": "error",
+          "description": "Specifies whether to validate that a file is free of problems, before attempting to commit changes to it."
+        },
         "gitdoc.enabled": {
           "type": "boolean",
           "default": false,
@@ -94,11 +104,6 @@
           "type": "string",
           "default": "**/*",
           "description": "Specifies a glob that indicates the specific files that should be automatically committed."
-        },
-        "gitdoc.ignoreErrors": {
-          "type": "boolean",
-          "default": false,
-          "description": "Specifies whether to commit changes to files, even if they have errors associated with them."
         }
       }
     },

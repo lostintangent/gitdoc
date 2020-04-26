@@ -43,7 +43,7 @@ export async function commit(repository: Repository, message?: string) {
       .map((change) => change.uri);
 
     if (changedUris.length > 0) {
-      if (!config.ignoreErrors) {
+      if (config.commitValidationLevel !== "none") {
         const diagnostics = vscode.languages
           .getDiagnostics()
           .filter(([uri, diagnostics]) => {
@@ -55,7 +55,9 @@ export async function commit(repository: Repository, message?: string) {
             return isChanged
               ? diagnostics.some(
                   (diagnostic) =>
-                    diagnostic.severity === vscode.DiagnosticSeverity.Error
+                    diagnostic.severity === vscode.DiagnosticSeverity.Error ||
+                    (config.commitValidationLevel === "warning" &&
+                      diagnostic.severity === vscode.DiagnosticSeverity.Warning)
                 )
               : false;
           });

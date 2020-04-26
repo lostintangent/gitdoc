@@ -25,7 +25,9 @@ By default, when you enable `GitDoc`, it will create commits every 30s, whenever
 
 ## Error Detection
 
-By default, auto-commits are only made when a file is changed, and it doesn't have any pending errors (e.g. issues in the `Problems` panel with an `error` severity). This prevents you from creating commits that represent invalid changes, and allows you to install whatever linting/testing/build extensions you want, knowing that they'll "gate" your auto-commits. If you want to ignore errors and simply always auto-commit, then you can set the `GitDoc: Ignore Errors` setting to `true`.
+By default, auto-commits are only made when a file is changed, and it doesn't have any pending errors (e.g. issues in the `Problems` panel with an `error` severity). This prevents you from creating commits that represent invalid changes, and allows you to install whatever linting/testing/build extensions you want, knowing that they'll "gate" your auto-commits. If you want to suppress commits in the presence of warnings, or ignore problems entirely, and simply always auto-commit, then you can set the `Commit Validation Level` setting to `warning` or `none` respectively.
+
+<img width="600px" src="https://user-images.githubusercontent.com/116461/80316927-8c3f2400-87b5-11ea-9e6f-62b28ec3b4ce.gif" />
 
 ## Auto-saving
 
@@ -99,8 +101,8 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 
 - `GitDoc: Commit Message Format` - Specifies the [moment.js](https://momentjs.com/) format string to use when generating auto-commit messages. Defaults to `LLL`.
 
+- `GitDoc: Commit Validation Level` - Specifies whether to validate that a file is free of problems, before attempting to commit changes to it. Defaults to `error`.
+
 - `GitDoc: Enabled` - Specifies whether to automatically create a commit each time you save a file.
 
 - `GitDoc: File Pattern` - Specifies a glob that indicates the exact files that should be automatically committed. This is useful if you'd like to only [auto-commiting specific files](#auto-commiting-specific-files), as opposed to an entire branch.
-
-- `GitDoc: Ignore Errors` - Specifies whether to commit changes to files, even if they have errors associated with them. Defaults to `false`.

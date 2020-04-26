@@ -4,6 +4,7 @@ const DEFAULT_DELAY_MS = 30000;
 const ENABLED_KEY = "enabled";
 
 export type AutoPush = "onCommit" | "afterDelay" | "off";
+export type CommitValidationLevel = "error" | "warning" | "none";
 
 function config() {
   return vscode.workspace.getConfiguration("gitdoc");
@@ -22,6 +23,9 @@ export default {
   get commitMessageFormat(): string {
     return config().get("commitMessageFormat", "lll");
   },
+  get commitValidationLevel(): CommitValidationLevel {
+    return config().get("commitValidationLevel", "error");
+  },
   get enabled() {
     return config().get(ENABLED_KEY, false);
   },
@@ -30,8 +34,5 @@ export default {
   },
   get filePattern() {
     return config().get("filePattern", "**/*");
-  },
-  get ignoreErrors() {
-    return config().get("ignoreErrors", true);
   },
 };
