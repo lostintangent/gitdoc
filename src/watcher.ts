@@ -43,6 +43,27 @@ export async function commit(repository: Repository, message?: string) {
       .map((change) => change.uri);
 
     if (changedUris.length > 0) {
+      if (!config.ignoreErrors) {
+        const diagnostics = vscode.languages
+          .getDiagnostics()
+          .filter(([uri, diagnostics]) => {
+            const isChanged = changedUris.find(
+              (changedUri) =>
+                changedUri.toString().localeCompare(uri.toString()) === 0
+            );
+
+            return isChanged
+              ? diagnostics.some(
+                  (diagnostic) =>
+                    diagnostic.severity === vscode.DiagnosticSeverity.Error
+                )
+              : false;
+          });
+
+        if (diagnostics.length > 0) {
+          return;
+        }
+      }
       // @ts-ignore
       await repository._repository.add(changedUris);
       const momentInstance = moment();

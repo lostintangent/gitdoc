@@ -31,4 +31,7 @@ export default {
   get filePattern() {
     return config().get("filePattern", "**/*");
   },
+  get ignoreErrors() {
+    return config().get("ignoreErrors", true);
+  },
 };

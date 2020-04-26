@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "VS Code extension that allows you to edit a Git repo, like it's a multi-file, versioned document.",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "extensionKind": [
     "workspace"
   ],
@@ -94,6 +94,11 @@
           "type": "string",
           "default": "**/*",
           "description": "Specifies a glob that indicates the specific files that should be automatically committed."
+        },
+        "gitdoc.ignoreErrors": {
+          "type": "boolean",
+          "default": false,
+          "description": "Specifies whether to commit changes to files, even if they have errors associated with them."
         }
       }
     },

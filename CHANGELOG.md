@@ -1,3 +1,7 @@
+## v0.0.6 (04/25/2020)
+
+- Auto-commits are now only made when changes files don't have any associated errors. This behavior can be changed with the new `GitDoc: Ignore Errors` setting.
+
 ## v0.0.5 (04/23/2020)
 
 - Introduced the `Undo Version` command to the `Timeline` tree, which allows you to revert a previous change

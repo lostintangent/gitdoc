@@ -1,6 +1,8 @@
 # GitDoc 📄
 
-GitDoc is a Visual Studio Code extension that allows you to edit git repos like they're a multi-file, versioned document. This gives you the simplicity of a Google/Word Doc (creating "snapshots" by saving, not by running `git commit`), but with the richness of git history, and the ability to easily [share](https://github.com) your work. You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of a change), permanently on [specific branches](#auto-commiting-specific-branches) (e.g. you have a `docs` repo that you want to version like a document), or only for [specific files](#auto-commiting-specific-files) (e.g. auto-commmit `*.md` files, but nothing else), which allows you to easily switch between "versioning modalities". Additionally, you can opt into [auto-pushing](#auto-pushing) your changes to a remote, in order to treat your repo as a fully synchronized document source.
+GitDoc is a Visual Studio Code extension that allows you to edit git repos like they're a multi-file, versioned document. This gives you the simplicity of a Google/Word Doc (creating "snapshots" by saving, not by running `git commit`), but with the richness of git history, and the ability to easily [share](https://github.com) your work. You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of a change), permanently on [specific branches](#auto-commiting-specific-branches) (e.g. you have a `docs` repo that you want to version like a document), or only for [specific files](#auto-commiting-specific-files) (e.g. auto-commmit `*.md` files, but nothing else). This allows you to easily switch between "versioning modalities", in order to support the diverse set of use cases that can benefit from being stored in a git repo (e.g. team projects, your personal blog, school work, etc.)
+
+Commits are only created for [error-free code](#error-detection), which allows you to author and save changes, knowing you aren't accidentally commiting invalid states. Additionally, just because you're auto-commmiting your changes, doesn't mean you lose control over your version history. When needed, you can easily [restore](#restoring-versions), [undo](#undoing-changes), and/or [squash](#collapsing-versions) versions, without needing to memorize the [magic of git](https://sethrobertson.github.io/GitFixUm/fixup.html). Additionally, you can opt into [auto-pushing](#auto-pushing) your changes to a remote, in order to treat your repo as a fully synchronized document source.
 
 <img width="700px" src="https://user-images.githubusercontent.com/116461/79521572-5a3bfe00-800e-11ea-83a0-8e125122fa8f.gif" />
 
@@ -11,7 +13,7 @@ GitDoc is a Visual Studio Code extension that allows you to edit git repos like 
 3. Open a file, make a change, and then save it
 4. Open the `Timeline` view on the `Explorer` tab (or run `git log`), and within 30s, notice that a new commit was created on your behalf
 5. Select the top item in the `Timeline` view to see the diff of the change you just made
-6. Continue to make changes, knowing that they'll be automatically tracked for you 👍
+6. Continue to make changes, knowing that they'll be automatically tracked for you (as long as they don't contain [errors](#error-detection)) 👍
 7. At any time, you can [restore](#restoring-versions), [undo](#undoing-changes), and/or [squash](#collapsing-versions) versions from the `Timeline`, in order to "clean" up/manage your history
 8. When you're done, simply click the `GitDoc` button in your status bar, run the `GitDoc: Disable` command, or close/reload VS Code
 
@@ -20,6 +22,10 @@ From here, you can permanently enable auto-commits for an entire repo or [branch
 ## Auto-commiting
 
 By default, when you enable `GitDoc`, it will create commits every 30s, whenever there are actually changes. So if you don't make any changes, than it won't make any commits. However, if you're continuously writing code, then it's only going to capture those edits in 30s intervals. This way, you don't generate a massive number of commits, depending on how frequently you save files. If you find that 30s is too short or too long, you can customize this by setting the `GitDoc: Auto Commit Delay` setting to the appropriate value.
+
+## Error Detection
+
+By default, auto-commits are only made when a file is changed, and it doesn't have any pending errors (e.g. issues in the `Problems` panel with an `error` severity). This prevents you from creating commits that represent invalid changes, and allows you to install whatever linting/testing/build extensions you want, knowing that they'll "gate" your auto-commits. If you want to ignore errors and simply always auto-commit, then you can set the `GitDoc: Ignore Errors` setting to `true`.
 
 ## Auto-saving
 
@@ -96,3 +102,5 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc: Enabled` - Specifies whether to automatically create a commit each time you save a file.
 
 - `GitDoc: File Pattern` - Specifies a glob that indicates the exact files that should be automatically committed. This is useful if you'd like to only [auto-commiting specific files](#auto-commiting-specific-files), as opposed to an entire branch.
+
+- `GitDoc: Ignore Errors` - Specifies whether to commit changes to files, even if they have errors associated with them. Defaults to `false`.
