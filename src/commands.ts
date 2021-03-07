@@ -18,9 +18,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
   }
 
   registerCommand("enable", updateContext.bind(null, true));
-  registerCommand("enableBranch", updateContext.bind(null, true, true));
   registerCommand("disable", updateContext.bind(null, false));
-  registerCommand("disableBranch", updateContext.bind(null, false, true));
 
   registerCommand("restoreVersion", async (item: GitTimelineItem) => {
     if (!vscode.window.activeTextEditor) {

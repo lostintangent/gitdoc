@@ -5,8 +5,8 @@ import config from "./config";
 import { EXTENSION_NAME } from "./constants";
 import { getGitApi, GitAPI } from "./git";
 import { store } from "./store";
-import { watchForChanges } from "./watcher";
-import { setBranchEnabledContext, updateContext } from "./utils";
+import { commit, watchForChanges } from "./watcher";
+import { updateContext } from "./utils";
 
 export async function activate(context: vscode.ExtensionContext) {
   const git = await getGitApi();
@@ -52,9 +52,17 @@ async function checkEnabled(git: GitAPI) {
     (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME);
 
   updateContext(enabled);
-  setBranchEnabledContext(config.enabled);
 
   if (enabled) {
     watcher = watchForChanges(git);
+  }
+}
+
+export async function deactivate() {
+  if (store.enabled && config.commitOnClose) {
+    const git = await getGitApi();
+    if (git && git.repositories.length > 0) {
+      return commit(git.repositories[0]);
+    }
   }
 }

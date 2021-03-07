@@ -21,6 +21,11 @@ export interface Change {
   readonly uri: vscode.Uri;
 }
 
+export enum ForcePushMode {
+  Force,
+  ForceWithLease,
+}
+
 export interface Repository {
   state: RepositoryState;
 
@@ -29,10 +34,13 @@ export interface Repository {
 
   checkout(treeish: string): Promise<void>;
 
+  pull(unshallow?: boolean): Promise<void>;
+
   push(
     remoteName?: string,
     branchName?: string,
-    setUpstream?: boolean
+    setUpstream?: boolean,
+    forcePush?: ForcePushMode
   ): Promise<void>;
 
   commit(message: string, opts?: CommitOptions): Promise<void>;

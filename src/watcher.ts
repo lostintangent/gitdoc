@@ -1,22 +1,16 @@
 import { debounce } from "debounce";
 import * as vscode from "vscode";
 import config from "./config";
-import { GitAPI, Repository } from "./git";
+import { ForcePushMode, GitAPI, Repository } from "./git";
 import moment = require("moment");
 import { store } from "./store";
 import { reaction } from "mobx";
 import * as minimatch from "minimatch";
 
-export enum ForcePushMode {
-  Force,
-  ForceWithLease,
-}
-
 async function pushRepository(repository: Repository) {
   store.isPushing = true;
 
-  // @ts-ignore
-  await repository._repository.pushTo(
+  await repository.push(
     "origin",
     repository.state.HEAD?.name,
     false,
@@ -24,6 +18,18 @@ async function pushRepository(repository: Repository) {
   );
 
   store.isPushing = false;
+
+  if (config.autoPull === "onPush") {
+    await pullRepository(repository);
+  }
+}
+
+async function pullRepository(repository: Repository) {
+  store.isPulling = true;
+
+  await repository.pull();
+
+  store.isPulling = false;
 }
 
 function matches(uri: vscode.Uri) {
@@ -83,6 +89,10 @@ export async function commit(repository: Repository, message?: string) {
 
       if (config.autoPush === "onCommit") {
         await pushRepository(repository);
+      }
+
+      if (config.autoPull === "onCommit") {
+        await pullRepository(repository);
       }
     }
   }
@@ -163,10 +173,25 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
     });
   }
 
+  if (config.autoPull === "afterDelay") {
+    const interval = setInterval(
+      async () => pullRepository(git.repositories[0]),
+      config.autoPullDelay
+    );
+
+    disposables.push({
+      dispose: () => clearInterval(interval),
+    });
+  }
+
   const reactionDisposable = reaction(
-    () => [store.isPushing],
+    () => [store.isPushing, store.isPulling],
     () => {
-      const suffix = store.isPushing ? " (Pushing...)" : "";
+      const suffix = store.isPushing
+        ? " (Pushing...)"
+        : store.isPulling
+        ? " (Pulling...)"
+        : "";
       statusBarItem!.text = `$(git-commit) GitDoc${suffix}`;
     }
   );
@@ -174,6 +199,10 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   disposables.push({
     dispose: reactionDisposable,
   });
+
+  if (config.pullOnOpen) {
+    pullRepository(git.repositories[0]);
+  }
 
   return {
     dispose: () => {

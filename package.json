@@ -3,20 +3,26 @@
   "displayName": "GitDoc",
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
-  "description": "VS Code extension that allows you to edit a Git repo, like it's a multi-file, versioned document.",
-  "version": "0.0.6",
+  "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
+  "version": "0.0.7",
   "extensionKind": [
     "workspace"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/vsls-contrib/gitdoc.git"
+    "url": "https://github.com/lostintangentgitdoc.git"
   },
   "engines": {
     "vscode": "^1.44.0"
   },
   "categories": [
     "Other"
+  ],
+  "keywords": [
+    "auto",
+    "commit",
+    "sync",
+    "git"
   ],
   "activationEvents": [
     "*"
@@ -30,18 +36,8 @@
         "category": "GitDoc"
       },
       {
-        "command": "gitdoc.disableBranch",
-        "title": "Disable (Branch)",
-        "category": "GitDoc"
-      },
-      {
         "command": "gitdoc.enable",
         "title": "Enable",
-        "category": "GitDoc"
-      },
-      {
-        "command": "gitdoc.enableBranch",
-        "title": "Enable (Branch)",
         "category": "GitDoc"
       },
       {
@@ -65,6 +61,22 @@
           "default": 30000,
           "description": "Controls the delay in ms after which any changes are automatically committed. Only applies when `GitDoc: Enabled` is set to `true`."
         },
+        "gitdoc.autoPull": {
+          "type": "string",
+          "enum": [
+            "afterDelay",
+            "onCommit",
+            "onPush",
+            "off"
+          ],
+          "default": "onPush",
+          "description": "Specifies whether to automatically pull changes from the current remote."
+        },
+        "gitdoc.autoPullDelay": {
+          "type": "number",
+          "default": 30000,
+          "description": "Controls the delay in ms after which any commits are automatically pulled. Only applies when `GitDoc: Auto Pull` is set to `afterDelay`."
+        },
         "gitdoc.autoPush": {
           "type": "string",
           "enum": [
@@ -72,7 +84,7 @@
             "onCommit",
             "off"
           ],
-          "default": "off",
+          "default": "onCommit",
           "description": "Specifies whether to automatically push your changes to the current remote."
         },
         "gitdoc.autoPushDelay": {
@@ -95,6 +107,11 @@
           "default": "error",
           "description": "Specifies whether to validate that a file is free of problems, before attempting to commit changes to it."
         },
+        "gitdoc.commitOnClose": {
+          "type": "boolean",
+          "default": true,
+          "description": "Specifies whether to automatically commit changes when you close VS Code."
+        },
         "gitdoc.enabled": {
           "type": "boolean",
           "default": false,
@@ -104,6 +121,11 @@
           "type": "string",
           "default": "**/*",
           "description": "Specifies a glob that indicates the specific files that should be automatically committed."
+        },
+        "gitdoc.pullOnOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Specifies whether to automatically pull remote changes when you open a repo."
         }
       }
     },
@@ -114,16 +136,8 @@
           "when": "gitOpenRepositoryCount != 0 && gitdoc:enabled"
         },
         {
-          "command": "gitdoc.disableBranch",
-          "when": "gitOpenRepositoryCount != 0 && gitdoc:branchEnabled"
-        },
-        {
           "command": "gitdoc.enable",
           "when": "gitOpenRepositoryCount != 0 && !gitdoc:enabled"
-        },
-        {
-          "command": "gitdoc.enableBranch",
-          "when": "gitOpenRepositoryCount != 0 && !gitdoc:branchEnabled"
         },
         {
           "command": "gitdoc.restoreVersion",
@@ -161,7 +175,8 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "postinstall": "node ./node_modules/vscode/bin/install"
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "package": "vsce package"
   },
   "devDependencies": {
     "typescript": "^3.1.4",

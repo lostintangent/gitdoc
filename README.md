@@ -1,6 +1,6 @@
 # GitDoc 📄
 
-GitDoc is a Visual Studio Code extension that allows you to edit git repos like they're a multi-file, versioned document. This gives you the simplicity of a Google/Word Doc (creating "snapshots" by saving, not by running `git commit`), but with the richness of git history, and the ability to easily [share](https://github.com) your work. You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of a change), permanently on [specific branches](#auto-commiting-specific-branches) (e.g. you have a `docs` repo that you want to version like a document), or only for [specific files](#auto-commiting-specific-files) (e.g. auto-commmit `*.md` files, but nothing else). This allows you to easily switch between "versioning modalities", in order to support the diverse set of use cases that can benefit from being stored in a git repo (e.g. team projects, your personal blog, school work, etc.)
+GitDoc is a Visual Studio Code extension that allows you to automatically commit/push/pull changes on save. This gives you the simplicity of a Google/Word Doc (creating "snapshots" by saving, not by running `git commit`), but with the richness of git history, and the ability to easily [share](https://github.com) your work. You can enable these auto-commits during specific periods (e.g. when you're working on a feature branch and want to track the evolution of a change), permanently on [specific branches](#auto-commiting-specific-branches) (e.g. you have a `docs` repo that you want to version like a document), or only for [specific files](#auto-commiting-specific-files) (e.g. auto-commmit `*.md` files, but nothing else). This allows you to easily switch between "versioning modalities", in order to support the diverse set of use cases that can benefit from being stored in a git repo (e.g. team projects, your personal blog, school work, etc.)
 
 Commits are only created for [error-free code](#error-detection), which allows you to author and save changes, knowing you aren't accidentally commiting invalid states. Additionally, just because you're auto-commmiting your changes, doesn't mean you lose control over your version history. When needed, you can easily [restore](#restoring-versions), [undo](#undoing-changes), and/or [squash](#squashing-versions) versions, without needing to memorize the [magic of git](https://sethrobertson.github.io/GitFixUm/fixup.html). Additionally, you can opt into [auto-pushing](#auto-pushing) your changes to a remote, in order to treat your repo as a fully synchronized document source.
 
@@ -15,13 +15,23 @@ Commits are only created for [error-free code](#error-detection), which allows y
 5. Select the top item in the `Timeline` view to see the diff of the change you just made
 6. Continue to make changes, knowing that they'll be automatically tracked for you (as long as they don't contain [errors](#error-detection)) 👍
 7. At any time, you can [restore](#restoring-versions), [undo](#undoing-changes), and/or [squash](#collapsing-versions) versions from the `Timeline`, in order to "clean" up/manage your history
-8. When you're done, simply click the `GitDoc` button in your status bar, run the `GitDoc: Disable` command, or close/reload VS Code
+8. When you're done, simply click the `GitDoc` button in your status bar, run the `GitDoc: Disable` command
 
 From here, you can permanently enable auto-commits for an entire repo or [branch](#auto-commiting-specific-branches), customize the [files that are auto-committed](#auto-commiting-specific-files), and even [auto-push your changes](#auto-pushing) in order to keep your repo fully synced.
 
 ## Auto-commiting
 
-By default, when you enable `GitDoc`, it will create commits every 30s, whenever there are actually changes. So if you don't make any changes, than it won't make any commits. However, if you're continuously writing code, then it's only going to capture those edits in 30s intervals. This way, you don't generate a massive number of commits, depending on how frequently you save files. If you find that 30s is too short or too long, you can customize this by setting the `GitDoc: Auto Commit Delay` setting to the appropriate value.
+By default, when you enable `GitDoc`, it will create commits every 30s, _whenever there are actually changes_. So if you don't make any changes, than it won't make any commits. However, if you're continuously writing code, then it's only going to capture those edits in 30s intervals. This way, you don't generate a massive number of commits, depending on how frequently you save files. If you find that 30s is too short or too long, you can customize this by setting the `GitDoc: Auto Commit Delay` setting to the appropriate value.
+
+## Auto-pushing
+
+In addition to automatically creating commits, GitDoc will automatically push your changes to the configured remote. By default, changes will be pushed as soon as you commit them,but this can be configured via the `GitDoc: Autopush` setting. This can be set to `afterDelay` in order to push on some sort of frequency (controlled via the `GitDoc: Auto Push Delay` setting, which defaults to `30s`). Additionally, if you don't want to auto-push changes, you can disable this behavior by setting the `GitDoc: Autopush` setting to `off`.
+
+> Note: When you enable this, GitDoc will actually perform a `git push --force`, since certain operations such as [`squashing`](#squashing-versions) can actually re-write history.
+
+## Auto-pulling
+
+By default, when you enable `GitDoc`, it will automatically pull changes from the repo when you 1) open the workspace, and 2) push changes. This ensures that your local copy is in sync with the remote, and attempts to mitigate merge conflics from happening. If you'd like to modify this behavior, you can customize the `GitDoc: Auto Pull` and `GitDoc: Pull on Open` settings.
 
 ## Error Detection
 
@@ -45,12 +55,6 @@ If you'd like to only enable auto-commiting for specific files, you can set the 
 
 When this setting is set, the `GitDoc` [status bar](#status-bar) which only appear when you have a file that is matches it. This way, you can easily tell when you're editing a file that will be auto-committed/pushed.
 
-## Auto-pushing
-
-In addition to automatically created commits, you can also choose to automatically push your changes, by setting the `GitDoc: Auto Push` setting. By default, this setting is set to `off`, but you can set it to `onCommit` in order to push every time a commit is made, or `afterDelay` in order to push on some sort of frequency. If you set it to the later, then you can control the delay duration by setting the `GitDoc: Auto Push Delay` setting.
-
-> Note that when you enable this, GitDoc will actually perform a `git push --force`, since certain operations such as [`squashing`](#squashing-versions) can actually re-write history. So before you enable this, be sure that you're comfortable with this behavior.
-
 ## Squashing versions
 
 Auto-committing is useful for tracking unique versions, however, depending on how frequently you save, you could end up creating a significant number of file versions. If a series of versions represent a single logical change, you can "squash" them together by right-clicking the oldest version in the `Timeline` tree and selecting the `Squash Version(s) Above` command. You can give the new version a name, and when submitted, the selected version, and all versions above it, will be "squashed" into a single version.
@@ -73,21 +77,15 @@ If you made a change, that you want to undo, you can simply open up the `Timelin
 
 ## Status Bar
 
-Whenever `GitDoc` is enabled, it will contribute a status bar item to your status bar. This simply indicates that it's enabled, and makes it easier for you to know which "versioning mode" you're in (auto-commit vs. manual commit). Additionally, if you enable [auto-pushing](#auto-pushing), then the status bar will indicate when it's syncing your commits with your repo.
-
-If you click the `GitDoc` status bar item, this will disable `GitDoc`. This allows you to easily enable GitDoc for a period of time, and then quickly turn it off. Note that if you've enabled GitDoc on a branch, then clicking the status bar only temporarily disables it, and it will become re-enabled the next time that you reload/open VS Code. If you want to permanently disable GitDoc for the current branch, run the `GitDoc: Disable (Branch)` command.
+Whenever `GitDoc` is enabled, it will contribute a status bar item to your status bar. This simply indicates that it's enabled, and makes it easier for you to know which "versioning mode" you're in (auto-commit vs. manual commit). Additionally, if you enable [auto-pushing](#auto-pushing), then the status bar will indicate when it's syncing your commits with your repo. If you click the `GitDoc` status bar item, this will disable `GitDoc`. This allows you to easily enable GitDoc for a period of time, and then quickly turn it off.
 
 ## Contributed Commands
 
 When you install the `GitDoc` extension, the following commands are contributed to the command palette, and are visible when your open workspace is also a git repository:
 
-- `GitDoc: Enable` - Temporarily enables auto-commits. This command is only visible when GitDoc isn't already enabled.
+- `GitDoc: Enable` - Enables auto-commits. This command is only visible when GitDoc isn't already enabled.
 
-- `GitDoc: Enable (Branch)` - Enables auto-commits on the current branch, and therefore, the setting will persist across reloading VS Code. This command is only visible when GitDoc isn't already enabled.
-
-- `GitDoc: Disabled` - Disables auto-commits. If auto-commits were enabled on this branch, then runnning this command only temporarily disables it, and it will be re-enabled when you reload/re-open VS Code. This is useful if you have a branch that you generally want to auto-commit on, but you want to turn it off for a certain period/editing session. This command is only visible when GitDoc is already enabled.
-
-- `GitDoc: Disabled (Branch)` - Disables auto-commits on the current branch. This command is only visible when GitDoc is already enabled for the current branch.
+- `GitDoc: Disable` - Disables auto-commits. This command is only visible when GitDoc is enabled.
 
 ## Contributed Settings
 
@@ -95,7 +93,11 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 
 - `GitDoc: Auto Commit Delay` - Controls the delay in ms after which any changes are automatically committed. Only applies when `GitDoc: Enabled` is set to `true`. Defaults to `30000` (30s).
 
-- `GitDoc: Autopush` - Specifies whether to automatically push changes to the current remote. Can be set to one of the following values: `afterDelay`, `onCommit` or `off`. Defaults to `off`.
+- `GitDoc: Autopull` - Specifies whether to automatically pull changes from the current remote. Can be set to one of the following values: `afterDelay`, `onCommit`, `onPush` or `off`. Defaults to `onPush`.
+
+- `GitDoc: Autopull Delay` - Controls the delay in ms after which any changes are automatically pulled. Only applies when `GitDoc: Auto Pull` is set to `afterDelay`. Defaults to `30000`.
+
+- `GitDoc: Autopush` - Specifies whether to automatically push changes to the current remote. Can be set to one of the following values: `afterDelay`, `onCommit` or `off`. Defaults to `onCommit`.
 
 - `GitDoc: Autopush Delay` - Controls the delay in ms after which any commits are automatically pushed. Only applies when `GitDoc: Auto Push` is set to `afterDelay`. Defaults to `30000`.
 
@@ -103,6 +105,10 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 
 - `GitDoc: Commit Validation Level` - Specifies whether to validate that a file is free of problems, before attempting to commit changes to it. Defaults to `error`.
 
+- `GitDoc: Commit on Close` - Specifies whether to automatically commit changes when you close VS Code. Defaults to `true`.
+
 - `GitDoc: Enabled` - Specifies whether to automatically create a commit each time you save a file.
 
 - `GitDoc: File Pattern` - Specifies a glob that indicates the exact files that should be automatically committed. This is useful if you'd like to only [auto-commiting specific files](#auto-commiting-specific-files), as opposed to an entire branch.
+
+- `GitDoc: Pull on Open` - Specifies whether to automatically pull remote changes when you open a repo. Defaults to `true`.

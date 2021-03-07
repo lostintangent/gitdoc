@@ -1,3 +1,9 @@
+## v0.0.7 (03/07/2021)
+
+- Introduce the ability to auto-pull changes from the remote.
+- Changes are now auto-committed when you close VS Code.
+- Removed the `GitDoc: Enable (Branch)` and `GitDoc: Disable (Branch)` commands
+
 ## v0.0.6 (04/25/2020)
 
 - Auto-commits are now only made when changes files don't have any associated errors. This behavior can be changed with the new `GitDoc: Commit Validation Level` setting.
