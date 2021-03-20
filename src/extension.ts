@@ -51,7 +51,7 @@ async function checkEnabled(git: GitAPI) {
     git.repositories.length > 0 &&
     (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME);
 
-  updateContext(enabled);
+  updateContext(enabled, false);
 
   if (enabled) {
     watcher = watchForChanges(git);

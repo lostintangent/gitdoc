@@ -5,8 +5,11 @@ import { store } from "./store";
 
 const ENABLED_KEY = `${EXTENSION_NAME}:enabled`;
 
-export function updateContext(enabled: boolean) {
+export function updateContext(enabled: boolean, updateConfig: boolean = true) {
   store.enabled = enabled;
-  config.enabled = enabled;
   vscode.commands.executeCommand("setContext", ENABLED_KEY, enabled);
+
+  if (updateConfig) {
+    config.enabled = enabled;
+  }
 }

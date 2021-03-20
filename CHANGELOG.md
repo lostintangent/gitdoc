@@ -1,6 +1,10 @@
+## v0.0.8 (03/20/2021)
+
+- Fixed an issue where the GitDoc setting was being written to every workspace you opened
+
 ## v0.0.7 (03/07/2021)
 
-- Introduce the ability to auto-pull changes from the remote.
+- Introduced the ability to auto-pull changes from the remote.
 - Changes are now auto-committed when you close VS Code.
 - Removed the `GitDoc: Enable (Branch)` and `GitDoc: Disable (Branch)` commands
 
