@@ -10,7 +10,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/lostintangentgitdoc.git"
+    "url": "https://github.com/lostintangent/gitdoc.git"
   },
   "engines": {
     "vscode": "^1.44.0"
