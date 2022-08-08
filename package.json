@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "extensionKind": [
     "workspace"
   ],
@@ -13,7 +13,7 @@
     "url": "https://github.com/lostintangent/gitdoc.git"
   },
   "engines": {
-    "vscode": "^1.44.0"
+    "vscode": "^1.70.0"
   },
   "categories": [
     "Other"
@@ -25,7 +25,7 @@
     "git"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {

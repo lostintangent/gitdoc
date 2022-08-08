@@ -32,7 +32,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
     const git = await getGitApi();
 
     // @ts-ignore
-    await git?.repositories[0]._repository.repository.checkout(item.ref, [
+    await git?.repositories[0].repository.repository.checkout(item.ref, [
       path,
     ]);
 
@@ -50,7 +50,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
     if (message) {
       const git = await getGitApi();
       // @ts-ignore
-      await git?.repositories[0]._repository.reset(`${item.ref}~1`);
+      await git?.repositories[0].repository.reset(`${item.ref}~1`);
       await commit(git?.repositories[0]!, message);
     }
   });
@@ -59,7 +59,7 @@ export function registerCommands(context: vscode.ExtensionContext) {
     const git = await getGitApi();
 
     // @ts-ignore
-    await git?.repositories[0]._repository.repository.run([
+    await git?.repositories[0].repository.repository.run([
       "revert",
       "-n", // Tell Git not to create a commit, so that we can make one with the right message format
       item.ref,

@@ -60,11 +60,11 @@ export async function commit(repository: Repository, message?: string) {
 
             return isChanged
               ? diagnostics.some(
-                  (diagnostic) =>
-                    diagnostic.severity === vscode.DiagnosticSeverity.Error ||
-                    (config.commitValidationLevel === "warning" &&
-                      diagnostic.severity === vscode.DiagnosticSeverity.Warning)
-                )
+                (diagnostic) =>
+                  diagnostic.severity === vscode.DiagnosticSeverity.Error ||
+                  (config.commitValidationLevel === "warning" &&
+                    diagnostic.severity === vscode.DiagnosticSeverity.Warning)
+              )
               : false;
           });
 
@@ -73,7 +73,7 @@ export async function commit(repository: Repository, message?: string) {
         }
       }
       // @ts-ignore
-      await repository._repository.add(changedUris);
+      await repository.repository.add(changedUris);
       const momentInstance = moment();
       const commitMessage =
         message || momentInstance.format(config.commitMessageFormat);
@@ -190,8 +190,8 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
       const suffix = store.isPushing
         ? " (Pushing...)"
         : store.isPulling
-        ? " (Pulling...)"
-        : "";
+          ? " (Pulling...)"
+          : "";
       statusBarItem!.text = `$(git-commit) GitDoc${suffix}`;
     }
   );
