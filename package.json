@@ -194,17 +194,17 @@
     "package": "vsce package"
   },
   "devDependencies": {
+    "@types/debounce": "^1.2.0",
     "@types/luxon": "^2.0.5",
+    "@types/minimatch": "^3.0.3",
     "@types/node": "^8.10.25",
+    "@types/vscode": "1.70.0",
     "tslint": "^5.8.0",
     "typescript": "^3.1.4",
-    "vsce": "^1.87.0",
-    "vscode": "^1.1.25"
+    "vsce": "^1.87.0"
   },
   "dependencies": {
-    "@types/debounce": "^1.2.0",
-    "@types/minimatch": "^3.0.3",
-    "@types/moment": "^2.13.0",
+
     "debounce": "^1.2.0",
     "luxon": "^2.0.2",
     "minimatch": "^3.0.4",
