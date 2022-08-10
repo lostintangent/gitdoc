@@ -2,25 +2,51 @@ import { debounce } from "debounce";
 import * as vscode from "vscode";
 import config from "./config";
 import { ForcePushMode, GitAPI, Repository } from "./git";
-import moment = require("moment");
+import { DateTime } from "luxon";
 import { store } from "./store";
 import { reaction } from "mobx";
 import * as minimatch from "minimatch";
 
-async function pushRepository(repository: Repository) {
+const REMOTE_NAME = "origin";
+
+async function pushRepository(
+  repository: Repository,
+  forcePush: boolean = false
+) {
   store.isPushing = true;
 
-  await repository.push(
-    "origin",
-    repository.state.HEAD?.name,
-    false,
-    ForcePushMode.Force
-  );
+  try {
+    if (config.autoPull === "onPush") {
+      await pullRepository(repository);
+    }
 
-  store.isPushing = false;
+    const pushArgs: any[] = [REMOTE_NAME, repository.state.HEAD?.name, false];
 
-  if (config.autoPull === "onPush") {
-    await pullRepository(repository);
+    if (forcePush) {
+      pushArgs.push(ForcePushMode.Force);
+    } else if (config.pushMode !== "push") {
+      const pushMode =
+        config.pushMode === "forcePush"
+          ? ForcePushMode.Force
+          : ForcePushMode.ForceWithLease;
+
+      pushArgs.push(pushMode);
+    }
+
+    await repository.push(...pushArgs);
+
+    store.isPushing = false;
+  } catch {
+    store.isPushing = false;
+
+    if (
+      await vscode.window.showWarningMessage(
+        "Remote repository contains conflicting changes.",
+        "Force Push"
+      )
+    ) {
+      await pushRepository(repository, true);
+    }
   }
 }
 
@@ -72,15 +98,24 @@ export async function commit(repository: Repository, message?: string) {
           return;
         }
       }
+
       // @ts-ignore
       await repository.repository.add(changedUris);
-      const momentInstance = moment();
-      const commitMessage =
-        message || momentInstance.format(config.commitMessageFormat);
-      const date = momentInstance.format();
+      let currentTime = DateTime.now();
 
-      process.env.GIT_AUTHOR_DATE = date;
-      process.env.GIT_COMMITTER_DATE = date;
+      // Ensure that the commit dates are formatted
+      // as UTC, so that other clients can properly
+      // re-offset them based on the user's locale.
+      const commitDate = currentTime.toUTC().toString();
+      process.env.GIT_AUTHOR_DATE = commitDate;
+      process.env.GIT_COMMITTER_DATE = commitDate;
+
+      if (config.timeZone) {
+        currentTime = currentTime.setZone(config.timeZone);
+      }
+
+      const commitMessage =
+        message || currentTime.toFormat(config.commitMessageFormat);
 
       await repository.commit(commitMessage);
 
@@ -119,8 +154,8 @@ export function ensureStatusBarItem() {
       vscode.StatusBarAlignment.Left
     );
 
-    statusBarItem.text = "$(git-commit) GitDoc";
-    statusBarItem.tooltip = "Auto-commiting files on save";
+    statusBarItem.text = "$(mirror)";
+    statusBarItem.tooltip = "GitDoc: Auto-commiting files on save";
     statusBarItem.command = "gitdoc.disable";
     statusBarItem.show();
   }
@@ -190,9 +225,9 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
       const suffix = store.isPushing
         ? " (Pushing...)"
         : store.isPulling
-          ? " (Pulling...)"
-          : "";
-      statusBarItem!.text = `$(git-commit) GitDoc${suffix}`;
+        ? " (Pulling...)"
+        : "";
+      statusBarItem!.text = `$(mirror)${suffix}`;
     }
   );
 

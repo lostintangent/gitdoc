@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "extensionKind": [
     "workspace"
   ],
@@ -94,8 +94,8 @@
         },
         "gitdoc.commitMessageFormat": {
           "type": "string",
-          "default": "LLL",
-          "description": "Specifies the moment.js format string to use when generating auto-commit messages."
+          "default": "ff",
+          "markdownDescription": "Specifies the date/time format string (using Luxon) to use when generating auto-commit messages. Views [the docs](https://moment.github.io/luxon/#/formatting?id=table-of-tokens) for more details."
         },
         "gitdoc.commitValidationLevel": {
           "type": "string",
@@ -126,6 +126,21 @@
           "type": "boolean",
           "default": true,
           "description": "Specifies whether to automatically pull remote changes when you open a repo."
+        },
+        "gitdoc.pushMode": {
+          "type": "string",
+          "enum": [
+            "forcePush",
+            "forcePushWithLease",
+            "push"
+          ],
+          "default": "forcePush",
+          "description": "Specifies how changes should be pushed after they're committed. This setting only applies when auto-pushing is enabled."
+        },
+        "gitdoc.timeZone": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "Specifies the timezone (as a [tz database name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)) that commit message dates should be offset to. Defaults to UTC."
         }
       }
     },
@@ -179,6 +194,7 @@
     "package": "vsce package"
   },
   "devDependencies": {
+    "@types/luxon": "^2.0.5",
     "@types/node": "^8.10.25",
     "tslint": "^5.8.0",
     "typescript": "^3.1.4",
@@ -190,8 +206,8 @@
     "@types/minimatch": "^3.0.3",
     "@types/moment": "^2.13.0",
     "debounce": "^1.2.0",
+    "luxon": "^2.0.2",
     "minimatch": "^3.0.4",
-    "mobx": "^5.14.2",
-    "moment": "^2.24.0"
+    "mobx": "^5.14.2"
   }
 }

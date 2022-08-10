@@ -6,6 +6,7 @@ const ENABLED_KEY = "enabled";
 export type AutoPull = AutoPush | "onPush";
 export type AutoPush = "onCommit" | "afterDelay" | "off";
 export type CommitValidationLevel = "error" | "warning" | "none";
+export type PushMode = "forcePush" | "forcePushWithLease" | "push";
 
 function config() {
   return vscode.workspace.getConfiguration("gitdoc");
@@ -47,5 +48,11 @@ export default {
   },
   get pullOnOpen() {
     return config().get("pullOnOpen", true);
+  },
+  get pushMode(): PushMode {
+    return config().get("pushMode", "forcePush");
+  },
+  get timeZone(): string | null {
+    return config().get("timeZone", null);
   },
 };

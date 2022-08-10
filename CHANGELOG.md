@@ -1,3 +1,10 @@
+## v0.1.0 (08/10/2022)
+
+- Fixed a bug with VS Code v1.70
+- Added the `GitDoc: Push Mode` setting, that allows controlling how commits are automatically pushed to the remote repository
+- Commit messages now format datetimes using a configured timezone
+- Removed the `GitDoc` suffix from the status bar button, in order to reduce UI clutter
+
 ## v0.0.8 (03/20/2021)
 
 - Fixed an issue where the GitDoc setting was being written to every workspace you opened
