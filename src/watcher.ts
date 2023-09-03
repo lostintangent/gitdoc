@@ -62,7 +62,7 @@ function matches(uri: vscode.Uri) {
   return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
-export async function commit(repository: Repository, message?: string) {
+export async function commit(repository: Repository, uri: vscode.Uri, message?: string) {
   const changes = [
     ...repository.state.workingTreeChanges,
     ...repository.state.mergeChanges,
@@ -100,7 +100,7 @@ export async function commit(repository: Repository, message?: string) {
       }
 
       // @ts-ignore
-      await repository.repository.add(changedUris);
+      await repository.repository.add([uri]);
       let currentTime = DateTime.now();
 
       // Ensure that the commit dates are formatted
@@ -133,13 +133,18 @@ export async function commit(repository: Repository, message?: string) {
   }
 }
 
-const commitMap = new Map();
-function debouncedCommit(repository: Repository) {
+const commitMap = new Map<Repository, () => Promise<void>>();
+function debouncedCommit(git: GitAPI, uri: vscode.Uri) {
+  const repository = git.getRepository(uri);
+  if (!repository) {
+    return;
+  }
+
   if (!commitMap.has(repository)) {
     commitMap.set(
       repository,
       debounce(async () => {
-        commit(repository);
+        commit(repository, uri);
       }, config.autoCommitDelay)
     );
   }
@@ -165,8 +170,19 @@ export function ensureStatusBarItem() {
 
 let disposables: vscode.Disposable[] = [];
 export function watchForChanges(git: GitAPI): vscode.Disposable {
-  const commitAfterDelay = debouncedCommit(git.repositories[0]);
-  disposables.push(git.repositories[0].state.onDidChange(commitAfterDelay));
+  for (const repository of git.repositories) {
+    const commitAfterDelay = (uri: vscode.Uri) => {
+      const debounced = debouncedCommit(git, uri);
+      if (debounced) {
+        debounced();
+      }
+    };
+    disposables.push(repository.state.onDidChange(() => {
+      if (vscode.window.activeTextEditor) {
+        commitAfterDelay(vscode.window.activeTextEditor.document.uri);
+      }
+    }));
+  }
 
   ensureStatusBarItem();
 
@@ -198,7 +214,9 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
 
   if (config.autoPush === "afterDelay") {
     const interval = setInterval(async () => {
-      pushRepository(git.repositories[0]);
+      for (const repository of git.repositories) {
+        pushRepository(repository);
+      }
     }, config.autoPushDelay);
 
     disposables.push({
@@ -210,7 +228,11 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
 
   if (config.autoPull === "afterDelay") {
     const interval = setInterval(
-      async () => pullRepository(git.repositories[0]),
+      async () => {
+        for (const repository of git.repositories) {
+          pullRepository(repository);
+        }
+      },
       config.autoPullDelay
     );
 
@@ -236,7 +258,9 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   });
 
   if (config.pullOnOpen) {
-    pullRepository(git.repositories[0]);
+    for (const repository of git.repositories) {
+      pullRepository(repository);
+    }
   }
 
   return {

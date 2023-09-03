@@ -30,15 +30,16 @@ export function registerCommands(context: vscode.ExtensionContext) {
     );
 
     const git = await getGitApi();
+    const repository = git?.getRepository(vscode.window.activeTextEditor.document.uri);
 
     // @ts-ignore
-    await git?.repositories[0].repository.repository.checkout(item.ref, [
+    await repository?.repository.checkout(item.ref, [
       path,
     ]);
 
     // TODO: Look into why the checkout
     // doesn't trigger the watcher.
-    commit(git?.repositories[0]!);
+    commit(repository!, vscode.window.activeTextEditor.document.uri);
   });
 
   registerCommand("squashVersions", async (item: GitTimelineItem) => {
@@ -49,22 +50,24 @@ export function registerCommands(context: vscode.ExtensionContext) {
 
     if (message) {
       const git = await getGitApi();
+      const repository = git?.getRepository(vscode.window.activeTextEditor.document.uri);
       // @ts-ignore
-      await git?.repositories[0].repository.reset(`${item.ref}~1`);
-      await commit(git?.repositories[0]!, message);
+      await repository?.repository.reset(`${item.ref}~1`);
+      await commit(repository!, vscode.window.activeTextEditor.document.uri, message);
     }
   });
 
   registerCommand("undoVersion", async (item: GitTimelineItem) => {
     const git = await getGitApi();
+    const repository = git?.getRepository(vscode.window.activeTextEditor.document.uri);
 
     // @ts-ignore
-    await git?.repositories[0].repository.repository.run([
+    await repository?.repository.run([
       "revert",
       "-n", // Tell Git not to create a commit, so that we can make one with the right message format
       item.ref,
     ]);
 
-    await commit(git?.repositories[0]!);
+    await commit(repository!, vscode.window.activeTextEditor.document.uri);
   });
 }

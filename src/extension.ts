@@ -40,12 +40,12 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 }
 
-let watcher: vscode.Disposable | null;
+let watchers: vscode.Disposable[] = [];
 async function checkEnabled(git: GitAPI) {
-  if (watcher) {
+  for (const watcher of watchers) {
     watcher.dispose();
-    watcher = null;
   }
+  watchers = [];
 
   const enabled =
     git.repositories.length > 0 &&
@@ -54,7 +54,7 @@ async function checkEnabled(git: GitAPI) {
   updateContext(enabled, false);
 
   if (enabled) {
-    watcher = watchForChanges(git);
+    watchers = git.repositories.map((repository) => watchForChanges(git));
   }
 }
 
@@ -62,7 +62,11 @@ export async function deactivate() {
   if (store.enabled && config.commitOnClose) {
     const git = await getGitApi();
     if (git && git.repositories.length > 0) {
-      return commit(git.repositories[0]);
+      for (const repository of git.repositories) {
+        if (vscode.window.activeTextEditor) {
+          return commit(repository, vscode.window.activeTextEditor.document.uri);
+        }
+      }
     }
   }
 }
