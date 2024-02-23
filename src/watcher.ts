@@ -1,7 +1,7 @@
 import { debounce } from "debounce";
 import * as vscode from "vscode";
 import config from "./config";
-import { ForcePushMode, GitAPI, Repository } from "./git";
+import { ForcePushMode, GitAPI, Repository, getSubmodule } from "./git"; // Import getSubmodule from src/git.ts
 import { DateTime } from "luxon";
 import { store } from "./store";
 import { reaction } from "mobx";
@@ -11,16 +11,26 @@ const REMOTE_NAME = "origin";
 
 async function pushRepository(
   repository: Repository,
-  forcePush: boolean = false
+  forcePush: boolean = false,
+  submodule?: string // Add a submodule name as an optional parameter
 ) {
   store.isPushing = true;
 
   try {
     if (config.autoPull === "onPush") {
-      await pullRepository(repository);
+      await pullRepository(repository, submodule); // Pass the submodule name to pullRepository
     }
 
-    const pushArgs: any[] = [REMOTE_NAME, repository.state.HEAD?.name, false];
+    const pushArgs: any[] = [REMOTE_NAME];
+
+    // If pushing a submodule, use the submodule name as the branch name
+    if (submodule) {
+      pushArgs.push(submodule);
+    } else {
+      pushArgs.push(repository.state.HEAD?.name);
+    }
+
+    pushArgs.push(false);
 
     if (forcePush) {
       pushArgs.push(ForcePushMode.Force);
@@ -45,15 +55,22 @@ async function pushRepository(
         "Force Push"
       )
     ) {
-      await pushRepository(repository, true);
+      await pushRepository(repository, true, submodule); // Pass the submodule name to pushRepository
     }
   }
 }
 
-async function pullRepository(repository: Repository) {
+async function pullRepository(repository: Repository, submodule?: string) { // Add a submodule name as an optional parameter
   store.isPulling = true;
 
-  await repository.pull();
+  const pullArgs: any[] = [];
+
+  // If pulling a submodule, use the submodule name as the refspec
+  if (submodule) {
+    pullArgs.push(REMOTE_NAME, submodule);
+  }
+
+  await repository.pull(...pullArgs);
 
   store.isPulling = false;
 }
@@ -70,64 +87,73 @@ export async function commit(repository: Repository, message?: string) {
   ];
 
   if (changes.length > 0) {
-    const changedUris = changes
-      .filter((change) => matches(change.uri))
-      .map((change) => change.uri);
+    // Group changes by submodule name, using null for the main repository
+    const changesBySubmodule = new Map<string | null, vscode.Uri[]>();
+    for (const change of changes) {
+      const submodule = change.submodule || null; // Use the submodule property of the change
+      const changedUris = changesBySubmodule.get(submodule) || [];
+      changedUris.push(change.uri);
+      changesBySubmodule.set(submodule, changedUris);
+    }
 
-    if (changedUris.length > 0) {
-      if (config.commitValidationLevel !== "none") {
-        const diagnostics = vscode.languages
-          .getDiagnostics()
-          .filter(([uri, diagnostics]) => {
-            const isChanged = changedUris.find(
-              (changedUri) =>
-                changedUri.toString().localeCompare(uri.toString()) === 0
-            );
+    // Filter the changes by the file pattern and commit them to each submodule first, then to the main repository
+    for (const [submodule, changedUris] of changesBySubmodule) {
+      const filteredUris = changedUris.filter((uri) => matches(uri));
+      if (filteredUris.length > 0) {
+        if (config.commitValidationLevel !== "none") {
+          const diagnostics = vscode.languages
+            .getDiagnostics()
+            .filter(([uri, diagnostics]) => {
+              const isChanged = filteredUris.find(
+                (changedUri) =>
+                  changedUri.toString().localeCompare(uri.toString()) === 0
+              );
 
-            return isChanged
-              ? diagnostics.some(
-                (diagnostic) =>
-                  diagnostic.severity === vscode.DiagnosticSeverity.Error ||
-                  (config.commitValidationLevel === "warning" &&
-                    diagnostic.severity === vscode.DiagnosticSeverity.Warning)
-              )
-              : false;
-          });
+              return isChanged
+                ? diagnostics.some(
+                    (diagnostic) =>
+                      diagnostic.severity === vscode.DiagnosticSeverity.Error ||
+                      (config.commitValidationLevel === "warning" &&
+                        diagnostic.severity === vscode.DiagnosticSeverity.Warning)
+                  )
+                : false;
+            });
 
-        if (diagnostics.length > 0) {
-          return;
+          if (diagnostics.length > 0) {
+            return;
+          }
         }
-      }
 
-      // @ts-ignore
-      await repository.repository.add(changedUris);
-      let currentTime = DateTime.now();
+        // @ts-ignore
+        await repository.repository.add(filteredUris);
+        let currentTime = DateTime.now();
 
-      // Ensure that the commit dates are formatted
-      // as UTC, so that other clients can properly
-      // re-offset them based on the user's locale.
-      const commitDate = currentTime.toUTC().toString();
-      process.env.GIT_AUTHOR_DATE = commitDate;
-      process.env.GIT_COMMITTER_DATE = commitDate;
+        // Ensure that the commit dates are formatted
+        // as UTC, so that other clients can properly
+        // re-offset them based on the user's locale.
+        const commitDate = currentTime.toUTC().toString();
+        process.env.GIT_AUTHOR_DATE = commitDate;
+        process.env.GIT_COMMITTER_DATE = commitDate;
 
-      if (config.timeZone) {
-        currentTime = currentTime.setZone(config.timeZone);
-      }
+        if (config.timeZone) {
+          currentTime = currentTime.setZone(config.timeZone);
+        }
 
-      const commitMessage =
-        message || currentTime.toFormat(config.commitMessageFormat);
+        const commitMessage =
+          message || currentTime.toFormat(config.commitMessageFormat);
 
-      await repository.commit(commitMessage);
+        await repository.commit(commitMessage);
 
-      delete process.env.GIT_AUTHOR_DATE;
-      delete process.env.GIT_COMMITTER_DATE;
+        delete process.env.GIT_AUTHOR_DATE;
+        delete process.env.GIT_COMMITTER_DATE;
 
-      if (config.autoPush === "onCommit") {
-        await pushRepository(repository);
-      }
+        if (config.autoPush === "onCommit") {
+          await pushRepository(repository, false, submodule); // Pass the submodule name to pushRepository
+        }
 
-      if (config.autoPull === "onCommit") {
-        await pullRepository(repository);
+        if (config.autoPull === "onCommit") {
+          await pullRepository(repository, submodule); // Pass the submodule name to pullRepository
+        }
       }
     }
   }
@@ -165,8 +191,11 @@ export function ensureStatusBarItem() {
 
 let disposables: vscode.Disposable[] = [];
 export function watchForChanges(git: GitAPI): vscode.Disposable {
-  const commitAfterDelay = debouncedCommit(git.repositories[0]);
-  disposables.push(git.repositories[0].state.onDidChange(commitAfterDelay));
+  // Iterate over all repositories, not just the first one
+  for (const repository of git.repositories) {
+    const commitAfterDelay = debouncedCommit(repository);
+    disposables.push(repository.state.onDidChange(commitAfterDelay));
+  }
 
   ensureStatusBarItem();
 
@@ -198,7 +227,10 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
 
   if (config.autoPush === "afterDelay") {
     const interval = setInterval(async () => {
-      pushRepository(git.repositories[0]);
+      // Push changes to each repository separately
+      for (const repository of git.repositories) {
+        await pushRepository(repository);
+      }
     }, config.autoPushDelay);
 
     disposables.push({
@@ -209,10 +241,12 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   }
 
   if (config.autoPull === "afterDelay") {
-    const interval = setInterval(
-      async () => pullRepository(git.repositories[0]),
-      config.autoPullDelay
-    );
+    const interval = setInterval(async () => {
+      // Pull changes from each repository separately
+      for (const repository of git.repositories) {
+        await pullRepository(repository);
+      }
+    }, config.autoPullDelay);
 
     disposables.push({
       dispose: () => clearInterval(interval),
@@ -236,7 +270,10 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   });
 
   if (config.pullOnOpen) {
-    pullRepository(git.repositories[0]);
+    // Pull changes from each repository separately
+    for (const repository of git.repositories) {
+      pullRepository(repository);
+    }
   }
 
   return {
