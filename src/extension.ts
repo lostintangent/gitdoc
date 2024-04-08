@@ -6,7 +6,7 @@ import { EXTENSION_NAME } from "./constants";
 import { getGitApi, GitAPI } from "./git";
 import { store } from "./store";
 import { commit, watchForChanges } from "./watcher";
-import { updateContext } from "./utils";
+import { updateContext, checkGitUserConfig } from "./utils";
 
 export async function activate(context: vscode.ExtensionContext) {
   const git = await getGitApi();
@@ -19,6 +19,9 @@ export async function activate(context: vscode.ExtensionContext) {
   store.enabled = config.enabled;
 
   registerCommands(context);
+
+  // Check for Git user configuration
+  await checkGitUserConfig();
 
   // Enable/disable the auto-commit watcher as the user
   // opens/closes Git repos, modifies their settings
