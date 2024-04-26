@@ -106,3 +106,25 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc: Pull on Open` - Specifies whether to automatically pull remote changes when you open a repo. Defaults to `true`.
 
 - `GitDoc: Push Mode` - Specifies how changes should be pushed after they're committed. This setting only applies when auto-pushing is enabled. Can be set to one of the following values: `forcePushWithLease`, `forcePush`, or `push`. Defaults to `forcePush`.
+
+## Using the Git API
+
+GitDoc leverages the Git API extensively to automate version control operations, making it easier for users to manage their git repositories without needing to manually execute git commands. This section outlines how GitDoc interacts with the Git API to provide its functionality.
+
+### Abstracting Git API Interactions
+
+The core of GitDoc's interaction with the Git API is abstracted within the `src/git.ts` file. This abstraction layer handles the complexities of communicating with the Git API, allowing other parts of the extension to perform version control operations in a more straightforward manner.
+
+### Committing, Pulling, and Pushing Changes
+
+The `src/commands.ts` and `src/watcher.ts` files utilize the Git API to perform essential version control operations. These include committing changes, pulling updates from the remote repository, and pushing changes to the remote. GitDoc automates these processes, ensuring that your repository is always up to date with the latest changes.
+
+### Example Commands
+
+GitDoc provides several commands that illustrate its use of the Git API, including:
+
+- `gitdoc.restoreVersion`: Restores a file to a specific version from its git history.
+- `gitdoc.squashVersions`: Squashes multiple versions into a single commit, simplifying the git history.
+- `gitdoc.undoVersion`: Undoes changes introduced by a specific version, effectively rolling back to a previous state.
+
+These commands showcase how GitDoc simplifies version control by automating interactions with the Git API.
