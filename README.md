@@ -106,3 +106,24 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc: Pull on Open` - Specifies whether to automatically pull remote changes when you open a repo. Defaults to `true`.
 
 - `GitDoc: Push Mode` - Specifies how changes should be pushed after they're committed. This setting only applies when auto-pushing is enabled. Can be set to one of the following values: `forcePushWithLease`, `forcePush`, or `push`. Defaults to `forcePush`.
+
+## Enabling GitDoc for Non-Active VSCode Projects
+
+GitDoc now supports enabling for non-active VSCode projects, allowing you to automatically commit changes to projects that are not currently open in your active VSCode workspace. This feature is particularly useful for users who work with multiple projects and want to ensure their changes are always synced, even when they switch contexts.
+
+### Configuration
+
+To enable GitDoc for non-active projects, you need to specify the projects in your `settings.json` file using the `gitdoc.nonActiveProjects` setting. This setting accepts an array of paths to the projects you want GitDoc to monitor.
+
+Example configuration:
+
+```json
+"gitdoc.nonActiveProjects": [
+  "/path/to/project1",
+  "/path/to/project2"
+]
+```
+
+With this configuration, GitDoc will monitor the specified projects for changes and automatically commit those changes, even if the projects are not currently active in your VSCode workspace.
+
+This feature enhances the flexibility of GitDoc, making it easier to manage version control across multiple projects without the need to manually switch between them in VSCode.

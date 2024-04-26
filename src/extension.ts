@@ -38,6 +38,18 @@ export async function activate(context: vscode.ExtensionContext) {
       }
     })
   );
+
+  // Initialize GitDoc for specified non-active projects
+  const nonActiveProjects = config.get("gitdoc.nonActiveProjects", []);
+  if (nonActiveProjects.length > 0) {
+    nonActiveProjects.forEach(projectPath => {
+      const uri = vscode.Uri.file(projectPath);
+      const repo = git.getRepository(uri);
+      if (repo) {
+        watchForChanges(repo);
+      }
+    });
+  }
 }
 
 let watcher: vscode.Disposable | null;
@@ -49,13 +61,21 @@ async function checkEnabled(git: GitAPI) {
 
   const enabled =
     git.repositories.length > 0 &&
-    (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME);
+    (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME || isNonActiveProjectEnabled(git));
 
   updateContext(enabled, false);
 
   if (enabled) {
     watcher = watchForChanges(git);
   }
+}
+
+function isNonActiveProjectEnabled(git: GitAPI): boolean {
+  const nonActiveProjects = config.get("gitdoc.nonActiveProjects", []);
+  return nonActiveProjects.some(projectPath => {
+    const uri = vscode.Uri.file(projectPath);
+    return !!git.getRepository(uri);
+  });
 }
 
 export async function deactivate() {

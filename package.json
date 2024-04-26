@@ -25,7 +25,8 @@
     "git"
   ],
   "activationEvents": [
-    "*"
+    "*",
+    "onFileSystem:gitdoc.nonActiveProjects"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -141,6 +142,11 @@
           "type": "string",
           "default": null,
           "markdownDescription": "Specifies the timezone (as a [tz database name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)) that commit message dates should be offset to. Defaults to UTC."
+        },
+        "gitdoc.nonActiveProjects": {
+          "type": "array",
+          "default": [],
+          "description": "Specifies non-active projects for gitdoc to monitor and enable auto-commit functionality."
         }
       }
     },
