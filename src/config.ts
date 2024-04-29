@@ -43,6 +43,9 @@ export default {
   set enabled(value: boolean) {
     config().update(ENABLED_KEY, value, vscode.ConfigurationTarget.Workspace);
   },
+  get excludeBranches(): string[] {
+    return config().get("excludeBranches", []);
+  },
   get filePattern() {
     return config().get("filePattern", "**/*");
   },

@@ -2,7 +2,6 @@ import { reaction } from "mobx";
 import * as vscode from "vscode";
 import { registerCommands } from "./commands";
 import config from "./config";
-import { EXTENSION_NAME } from "./constants";
 import { getGitApi, GitAPI } from "./git";
 import { store } from "./store";
 import { commit, watchForChanges } from "./watcher";
@@ -33,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("gitdoc.enabled")) {
+      if (e.affectsConfiguration("gitdoc.enabled") || e.affectsConfiguration("gitdoc.excludeBranches")) {
         checkEnabled(git);
       }
     })
@@ -47,9 +46,10 @@ async function checkEnabled(git: GitAPI) {
     watcher = null;
   }
 
+  const branchName = git.repositories[0]?.state?.HEAD?.name;
   const enabled =
     git.repositories.length > 0 &&
-    (store.enabled || git.repositories[0]?.state.HEAD?.name === EXTENSION_NAME);
+    store.enabled && !!branchName && !config.excludeBranches.includes(branchName);
 
   updateContext(enabled, false);
 

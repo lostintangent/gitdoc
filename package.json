@@ -141,6 +141,11 @@
           "type": "string",
           "default": null,
           "markdownDescription": "Specifies the timezone (as a [tz database name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones)) that commit message dates should be offset to. Defaults to UTC."
+        },
+        "gitdoc.excludeBranches": {
+          "type": "array",
+          "default": [],
+          "description": "Specifies a list of branches that should be excluded from auto-commits."
         }
       }
     },

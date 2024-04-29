@@ -106,3 +106,5 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc: Pull on Open` - Specifies whether to automatically pull remote changes when you open a repo. Defaults to `true`.
 
 - `GitDoc: Push Mode` - Specifies how changes should be pushed after they're committed. This setting only applies when auto-pushing is enabled. Can be set to one of the following values: `forcePushWithLease`, `forcePush`, or `push`. Defaults to `forcePush`.
+
+- `GitDoc: Exclude Branches` - Specifies a list of branches that should be excluded from auto-commits. This allows you to prevent auto-commits on specific branches, ensuring that your work on these branches remains manual. This is particularly useful for branches where you want to have more control over the commits, such as production or release branches. Defaults to `[]`.
