@@ -1,1 +1,1 @@
-* When adding new sections to the readme, make sure to end the section with a markdown note that indicates this is a work in progress
+* When adding entirely new sections to the readme, make sure to end the section with a markdown note that indicates this is a work in progress. Don't do this when modifying an existing section
