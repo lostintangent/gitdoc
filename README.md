@@ -79,6 +79,8 @@ When you install the `GitDoc` extension, the following commands are contributed 
 
 - `GitDoc: Disable` - Disables auto-commits. This command is only visible when GitDoc is enabled.
 
+- `GitDoc: Commit` - Manually commits changes. This command allows you to trigger a commit without waiting for the auto-commit interval.
+
 ## Contributed Settings
 
 The following settings enable you to customize the default behavior of `GitDoc`:

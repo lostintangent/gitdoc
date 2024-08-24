@@ -67,4 +67,11 @@ export function registerCommands(context: vscode.ExtensionContext) {
 
     await commit(git?.repositories[0]!);
   });
+
+  registerCommand("commit", async () => {
+    const git = await getGitApi();
+    if (git && git.repositories.length > 0) {
+      await commit(git.repositories[0]);
+    }
+  });
 }
