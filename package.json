@@ -51,6 +51,11 @@
       {
         "command": "gitdoc.undoVersion",
         "title": "Undo Version"
+      },
+      {
+        "command": "gitdoc.commit",
+        "title": "Commit",
+        "category": "GitDoc"
       }
     ],
     "configuration": {
@@ -170,6 +175,10 @@
         {
           "command": "gitdoc.undoVersion",
           "when": "false"
+        },
+        {
+          "command": "gitdoc.commit",
+          "when": "gitdoc:enabled"
         }
       ],
       "timeline/item/context": [
