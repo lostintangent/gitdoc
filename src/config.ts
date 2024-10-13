@@ -49,6 +49,9 @@ export default {
   get filePattern() {
     return config().get("filePattern", "**/*");
   },
+  get noVerify(): boolean {
+    return config().get("noVerify", false);
+  },
   get pullOnOpen() {
     return config().get("pullOnOpen", true);
   },

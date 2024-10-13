@@ -116,8 +116,7 @@ export async function commit(repository: Repository, message?: string) {
 
       const commitMessage =
         message || currentTime.toFormat(config.commitMessageFormat);
-
-      await repository.commit(commitMessage);
+      await repository.commit(commitMessage, { noVerify: config.noVerify });
 
       delete process.env.GIT_AUTHOR_DATE;
       delete process.env.GIT_COMMITTER_DATE;

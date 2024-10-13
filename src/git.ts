@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 
 interface CommitOptions {
   all?: boolean | "tracked";
+  noVerify?: boolean;
 }
 
 interface Branch {
