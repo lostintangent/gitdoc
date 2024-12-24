@@ -146,6 +146,11 @@
           "type": "array",
           "default": [],
           "description": "Specifies a list of branches that should be excluded from auto-commits."
+        },
+        "gitdoc.ai.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Specifies whether to use the VS Code lm API to generate commit messages."
         }
       }
     },

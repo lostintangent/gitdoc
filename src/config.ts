@@ -58,4 +58,7 @@ export default {
   get timeZone(): string | null {
     return config().get("timeZone", null);
   },
+  get aiEnabled() {
+    return config().get("ai.enabled", false);
+  }
 };

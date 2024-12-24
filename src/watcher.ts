@@ -62,6 +62,28 @@ function matches(uri: vscode.Uri) {
   return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
+async function generateCommitMessage(repository: Repository, changedUris: vscode.Uri[]): Promise<string | null> {
+  const diffs = await Promise.all(
+    changedUris.map(async (uri) => {
+      const path = uri.fsPath;
+      // @ts-ignore
+      return repository.repository.diffIndexWithHEAD(path);
+    })
+  );
+
+  const lm = vscode.lm;
+  const model = await lm.selectChatModel();
+
+  if (!model) {
+    return null;
+  }
+
+  const input = diffs.join("\n");
+  const response = await model.invokeTool("summarize", input);
+
+  return response.summary || null;
+}
+
 export async function commit(repository: Repository, message?: string) {
   const changes = [
     ...repository.state.workingTreeChanges,
@@ -114,8 +136,14 @@ export async function commit(repository: Repository, message?: string) {
         currentTime = currentTime.setZone(config.timeZone);
       }
 
-      const commitMessage =
-        message || currentTime.toFormat(config.commitMessageFormat);
+      let commitMessage = message || currentTime.toFormat(config.commitMessageFormat);
+
+      if (config.aiEnabled) {
+        const aiMessage = await generateCommitMessage(repository, changedUris);
+        if (aiMessage) {
+          commitMessage = aiMessage;
+        }
+      }
 
       await repository.commit(commitMessage);
 
