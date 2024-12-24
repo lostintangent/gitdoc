@@ -4,8 +4,15 @@ interface CommitOptions {
   all?: boolean | "tracked";
 }
 
+export const enum RefType {
+  Head,
+  RemoteHead,
+  Tag
+}
+
 interface Branch {
   readonly name: string;
+  type: RefType;
 }
 
 interface RepositoryState {
@@ -44,6 +51,10 @@ export interface Repository {
   ): Promise<void>;
 
   commit(message: string, opts?: CommitOptions): Promise<void>;
+
+  getRefs(): Promise<Branch[]>;
+
+  diffWithHEAD(path: string): Promise<string>;
 }
 
 export interface GitAPI {

@@ -65,23 +65,41 @@ function matches(uri: vscode.Uri) {
 async function generateCommitMessage(repository: Repository, changedUris: vscode.Uri[]): Promise<string | null> {
   const diffs = await Promise.all(
     changedUris.map(async (uri) => {
-      const path = uri.fsPath;
-      // @ts-ignore
-      return repository.repository.diffIndexWithHEAD(path);
-    })
-  );
+      const filePath = vscode.workspace.asRelativePath(uri);
+      const fileDiff = await repository.diffWithHEAD(filePath);
 
-  const lm = vscode.lm;
-  const model = await lm.selectChatModel();
+      return `## ${filePath}
+---
+${fileDiff}`;
+    }));
 
-  if (!model) {
-    return null;
+  const model = await vscode.lm.selectChatModels({ family: config.aiModel });
+  if (!model || model.length === 0) return null;
+
+  const prompt = `# Instructions:
+---
+Summarize the following code diffs into a single concise sentence that describes the essence of the changes that were made. Always start the summary with a present tense verb such as "Update", "Fix", "Modify", "Add", etc. Respond in plain text, with no markdown formatting, and without any extra content. Simply response with the summary, and don't reference the file paths that were changed. But it's important that you summarize all files.
+
+# Change diffs:
+---
+${diffs.join("\n\n")}
+
+# Summary:
+---
+`;
+
+  const response = await model[0].sendRequest([{
+    role: vscode.LanguageModelChatMessageRole.User,
+    name: "User",
+    content: prompt
+  }]);
+
+  let summary = "";
+  for await (const part of response.text) {
+    summary += part;
   }
 
-  const input = diffs.join("\n");
-  const response = await model.invokeTool("summarize", input);
-
-  return response.summary || null;
+  return summary;
 }
 
 export async function commit(repository: Repository, message?: string) {
@@ -121,8 +139,6 @@ export async function commit(repository: Repository, message?: string) {
         }
       }
 
-      // @ts-ignore
-      await repository.repository.add(changedUris);
       let currentTime = DateTime.now();
 
       // Ensure that the commit dates are formatted
@@ -145,7 +161,7 @@ export async function commit(repository: Repository, message?: string) {
         }
       }
 
-      await repository.commit(commitMessage);
+      await repository.commit(commitMessage, { all: true });
 
       delete process.env.GIT_AUTHOR_DATE;
       delete process.env.GIT_COMMITTER_DATE;
@@ -166,9 +182,7 @@ function debouncedCommit(repository: Repository) {
   if (!commitMap.has(repository)) {
     commitMap.set(
       repository,
-      debounce(async () => {
-        commit(repository);
-      }, config.autoCommitDelay)
+      debounce(() => commit(repository), config.autoCommitDelay)
     );
   }
 
@@ -253,8 +267,8 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
       const suffix = store.isPushing
         ? " (Pushing...)"
         : store.isPulling
-        ? " (Pulling...)"
-        : "";
+          ? " (Pulling...)"
+          : "";
       statusBarItem!.text = `$(mirror)${suffix}`;
     }
   );

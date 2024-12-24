@@ -2,7 +2,7 @@ import { reaction } from "mobx";
 import * as vscode from "vscode";
 import { registerCommands } from "./commands";
 import config from "./config";
-import { getGitApi, GitAPI } from "./git";
+import { getGitApi, GitAPI, RefType } from "./git";
 import { store } from "./store";
 import { commit, watchForChanges } from "./watcher";
 import { updateContext } from "./utils";
@@ -46,7 +46,13 @@ async function checkEnabled(git: GitAPI) {
     watcher = null;
   }
 
-  const branchName = git.repositories[0]?.state?.HEAD?.name;
+  let branchName = git.repositories[0]?.state?.HEAD?.name;
+
+  if (!branchName) {
+    const refs = await git.repositories[0]?.getRefs();
+    branchName = refs?.find((ref) => ref.type === RefType.Head)?.name;
+  }
+
   const enabled =
     git.repositories.length > 0 &&
     store.enabled && !!branchName && !config.excludeBranches.includes(branchName);
