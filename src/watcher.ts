@@ -1,4 +1,3 @@
-import { debounce } from "debounce";
 import * as vscode from "vscode";
 import config from "./config";
 import { ForcePushMode, GitAPI, Repository } from "./git";
@@ -175,6 +174,20 @@ export async function commit(repository: Repository, message?: string) {
       }
     }
   }
+}
+
+function debounce(fn: Function, delay: number) {
+  let timeout: NodeJS.Timeout | null = null;
+
+  return (...args: any[]) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      fn(...args);
+    }, delay);
+  };
 }
 
 const commitMap = new Map();

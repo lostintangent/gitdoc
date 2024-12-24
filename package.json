@@ -225,7 +225,6 @@
     "vsce": "^2.10.0"
   },
   "dependencies": {
-    "debounce": "^1.2.0",
     "luxon": "^2.0.2",
     "minimatch": "^3.0.4",
     "mobx": "^5.14.2"
