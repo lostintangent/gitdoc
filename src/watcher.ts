@@ -162,7 +162,7 @@ export async function commit(repository: Repository, message?: string) {
     }
   }
 
-  await repository.commit(commitMessage, { all: true });
+  await repository.commit(commitMessage, { all: true, noVerify: config.noVerify  });
 
   delete process.env.GIT_AUTHOR_DATE;
   delete process.env.GIT_COMMITTER_DATE;

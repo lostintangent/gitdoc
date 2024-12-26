@@ -122,6 +122,11 @@
           "default": "**/*",
           "description": "Specifies a glob that indicates the specific files that should be automatically committed."
         },
+        "gitdoc.noVerify": {
+          "type": "boolean",
+          "default": false,
+          "description": "Specifies whether to ignore configured Git-Hooks"
+        },
         "gitdoc.pullOnOpen": {
           "type": "boolean",
           "default": true,
