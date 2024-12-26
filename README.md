@@ -17,6 +17,8 @@ By default, commits are only created for [error-free code](#error-detection), wh
 
 From here, you can [restore](#restoring-versions), [undo](#undoing-changes), and/or [squash](#collapsing-versions) versions from the `Timeline`, in order to "clean" up/manage your history. When you're done, simply click the `GitDoc` button in your status bar, or run the `GitDoc: Disable` command, in order to disable auto-commits.
 
+And if you'd like to have GitDoc generate semantic commit messages on your behalf, you can enable the [Copilot integration](#ai-generated-commit-messages), which uses AI to summarize your changes 🤖
+
 ## Auto-commiting
 
 By default, when you enable `GitDoc`, it will create commits every 30s, _whenever there are actually changes_. So if you don't make any changes, than it won't make any commits. However, if you're continuously writing code, then it's only going to capture those edits in 30s intervals. This way, you don't generate a massive number of commits, depending on how frequently you save files. If you find that 30s is too short or too long, you can customize this by setting the `GitDoc: Auto Commit Delay` setting to the appropriate value.
@@ -46,6 +48,12 @@ By default, GitDoc will perform a "force push", since certain operations such as
 ## Auto-pulling
 
 By default, when you enable `GitDoc`, it will automatically pull changes from the repo when you 1) open the workspace, and 2) [push changes](#auto-pushing). This ensures that your local copy is in sync with the remote, and attempts to mitigate merge conflics from happening. If you'd like to modify this behavior, you can customize the `GitDoc: Auto Pull` and `GitDoc: Pull on Open` settings.
+
+## AI-Generated Commit Messages
+
+By default, GitDoc generates commit messages based on the day and time that they're committed. However, it can also use AI to generate commit messages based on contents of the changes you make. If you'd like to enable this capability, simply install the Copilot extension, and then enable the `GitDoc > AI: Enabled` setting. Once complete, you'll notice that your auto-commits now have semantic/friendly messages.
+
+By default, GitDoc uses `gpt-4o` for generating commit messages, but you can only try out other models (e.g. `o1`, `claude-3.5-sonnet`) by changing the `GitDoc > AI: Model` setting.
 
 ## Squashing versions
 
@@ -108,3 +116,9 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc: Push Mode` - Specifies how changes should be pushed after they're committed. This setting only applies when auto-pushing is enabled. Can be set to one of the following values: `forcePushWithLease`, `forcePush`, or `push`. Defaults to `forcePush`.
 
 - `GitDoc: Exclude Branches` - Specifies a list of branches that should be excluded from auto-commits. This allows you to prevent auto-commits on specific branches, ensuring that your work on these branches remains manual. This is particularly useful for branches where you want to have more control over the commits, such as production or release branches. Defaults to `[]`.
+
+### AI Settings
+
+- `GitDoc > AI: Enabled` - Specifies whether to use AI to generate commit messages. This setting only applies when you have the Copilot extension installed and setup.
+
+- `GitDoc > AI: Model` - Specifies the AI model to use when generating commit messages. This setting only applies when `GitDoc > AI: Enabled` is set to `true`. Defaults to `gpt-4o`.
