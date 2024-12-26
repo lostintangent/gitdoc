@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import config from "./config";
-import { ForcePushMode, GitAPI, Repository } from "./git";
+import { ForcePushMode, GitAPI, Repository, RefType } from "./git";
 import { DateTime } from "luxon";
 import { store } from "./store";
 import { reaction } from "mobx";
@@ -12,6 +12,8 @@ async function pushRepository(
   repository: Repository,
   forcePush: boolean = false
 ) {
+  if (!(await hasRemotes(repository))) return;
+
   store.isPushing = true;
 
   try {
@@ -50,11 +52,18 @@ async function pushRepository(
 }
 
 async function pullRepository(repository: Repository) {
+  if (!(await hasRemotes(repository))) return;
+  
   store.isPulling = true;
 
   await repository.pull();
 
   store.isPulling = false;
+}
+
+async function hasRemotes(repository: Repository): Promise<boolean> {
+  const refs = await repository.getRefs();
+  return refs.some((ref) => ref.type === RefType.RemoteHead);
 }
 
 function matches(uri: vscode.Uri) {
