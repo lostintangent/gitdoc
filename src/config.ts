@@ -67,4 +67,7 @@ export default {
   get aiModel() {
     return config().get("ai.model", "gpt-4o");
   },
+  get aiCustomInstructions() {
+    return config().get("ai.customInstructions", null);
+  },
 };

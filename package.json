@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "extensionKind": [
     "workspace"
   ],
@@ -173,6 +173,11 @@
             "gemini-1.5-pro"
           ],
           "markdownDescription": "Specifies the AI model to use when generating commit messages. This setting only applies when `GitDoc > AI: Enabled` is set to `true`. Defaults to `gpt-4o`."
+        },
+        "gitdoc.ai.customInstructions": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "Specifies custom instructions to use when generating commit messages (e.g. use conventional commit syntax, use emojis). This setting only applies when `GitDoc > AI: Enabled` is set to `true`."
         }
       }
     },

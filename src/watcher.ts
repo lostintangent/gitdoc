@@ -53,7 +53,7 @@ async function pushRepository(
 
 async function pullRepository(repository: Repository) {
   if (!(await hasRemotes(repository))) return;
-  
+
   store.isPulling = true;
 
   await repository.pull();
@@ -84,16 +84,23 @@ ${fileDiff}`;
   const model = await vscode.lm.selectChatModels({ family: config.aiModel });
   if (!model || model.length === 0) return null;
 
-  const prompt = `# Instructions:
----
-Summarize the following code diffs into a single concise sentence that describes the essence of the changes that were made. Always start the summary with a present tense verb such as "Update", "Fix", "Modify", "Add", etc. Respond in plain text, with no markdown formatting, and without any extra content. Simply response with the summary, and don't reference the file paths that were changed. But it's important that you summarize all files.
+  const prompt = `# Base Instructions
 
-# Change diffs:
----
+* Summarize the following source code diffs into a single concise sentence that describes the essence of the changes that were made.
+* Always start the summary with a present tense verb such as "Update", "Fix", "Modify", "Add", "Improve", "Organize", "Arrange", etc.
+* Respond in plain text, with no markdown formatting, and without any extra content. Simply respond with the summary, and without a trailing period.
+* Don't reference the file paths that were changed, but make sure summarize all significant changes.
+
+# Code change diffs
+
 ${diffs.join("\n\n")}
 
-# Summary:
----
+${config.aiCustomInstructions ? `# User-Provided Instructions (Important!)
+  
+${config.aiCustomInstructions}
+` : ""}
+# Summary
+
 `;
 
   const response = await model[0].sendRequest([{
@@ -171,7 +178,7 @@ export async function commit(repository: Repository, message?: string) {
     }
   }
 
-  await repository.commit(commitMessage, { all: true, noVerify: config.noVerify  });
+  await repository.commit(commitMessage, { all: true, noVerify: config.noVerify });
 
   delete process.env.GIT_AUTHOR_DATE;
   delete process.env.GIT_COMMITTER_DATE;

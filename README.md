@@ -17,7 +17,7 @@ By default, commits are only created for [error-free code](#error-detection), wh
 
 From here, you can [restore](#restoring-versions), [undo](#undoing-changes), and/or [squash](#collapsing-versions) versions from the `Timeline`, in order to "clean" up/manage your history. When you're done, simply click the `GitDoc` button in your status bar, or run the `GitDoc: Disable` command, in order to disable auto-commits.
 
-And if you'd like to have GitDoc generate semantic commit messages on your behalf, you can enable the [Copilot integration](#ai-generated-commit-messages), which uses AI to summarize your changes 🤖
+And if you'd like to have GitDoc generate semantic commit messages on your behalf, you can enable the [Copilot integration](#ai-generated-commit-messages), which uses AI to automatically summarize your changes 🤖
 
 ## Auto-commiting
 
@@ -53,7 +53,7 @@ By default, when you enable `GitDoc`, it will automatically pull changes from th
 
 By default, GitDoc generates commit messages based on the day and time that they're committed. However, it can also use AI to generate commit messages based on contents of the changes you make. If you'd like to enable this capability, simply install the Copilot extension, and then enable the `GitDoc > AI: Enabled` setting. Once complete, you'll notice that your auto-commits now have semantic/friendly messages.
 
-By default, GitDoc uses `gpt-4o` for generating commit messages, but you can only try out other models (e.g. `o1`, `claude-3.5-sonnet`) by changing the `GitDoc > AI: Model` setting.
+By default, GitDoc uses `gpt-4o` for generating commit messages, but you can only try out other models (e.g. `o1`, `claude-3.5-sonnet`) by changing the `GitDoc > AI: Model` setting. Additionally, if you'd like to instruct GitDoc to use specific stylistic preferences, then you can set the `GitDoc > AI: Custom Instructions` setting to include some additional guidances (e.g. "Prefix the messages with an emoji").
 
 ## Squashing versions
 
@@ -126,3 +126,5 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc > AI: Enabled` - Specifies whether to use AI to generate commit messages. This setting only applies when you have the Copilot extension installed and setup.
 
 - `GitDoc > AI: Model` - Specifies the AI model to use when generating commit messages. This setting only applies when `GitDoc > AI: Enabled` is set to `true`. Defaults to `gpt-4o`.
+
+- `GitDoc > AI: Custom Instructions` - Specifies custom instructions to use when generating commit messages (e.g. use conventional commit syntax, use emojis). This setting only applies when `GitDoc > AI: Enabled` is set to `true`."
