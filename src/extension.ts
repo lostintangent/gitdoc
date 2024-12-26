@@ -32,7 +32,10 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("gitdoc.enabled") || e.affectsConfiguration("gitdoc.excludeBranches")) {
+      if (e.affectsConfiguration("gitdoc.enabled") ||
+        e.affectsConfiguration("gitdoc.excludeBranches") ||
+        e.affectsConfiguration("gitdoc.autoCommitDelay") ||
+        e.affectsConfiguration("gitdoc.filePattern")) {
         checkEnabled(git);
       }
     })

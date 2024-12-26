@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "extensionKind": [
     "workspace"
   ],
@@ -150,7 +150,7 @@
         "gitdoc.ai.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Specifies whether to use AI to generate commit messages. This setting only applies when you have an AI extension installed and setup."
+          "description": "Specifies whether to use AI to generate commit messages. This setting only applies when you have the Copilot extension installed and setup."
         },
         "gitdoc.ai.model": {
           "type": "string",

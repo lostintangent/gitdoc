@@ -108,71 +108,71 @@ export async function commit(repository: Repository, message?: string) {
     ...repository.state.indexChanges,
   ];
 
-  if (changes.length > 0) {
-    const changedUris = changes
-      .filter((change) => matches(change.uri))
-      .map((change) => change.uri);
+  if (changes.length === 0) return;
 
-    if (changedUris.length > 0) {
-      if (config.commitValidationLevel !== "none") {
-        const diagnostics = vscode.languages
-          .getDiagnostics()
-          .filter(([uri, diagnostics]) => {
-            const isChanged = changedUris.find(
-              (changedUri) =>
-                changedUri.toString().localeCompare(uri.toString()) === 0
-            );
+  const changedUris = changes
+    .filter((change) => matches(change.uri))
+    .map((change) => change.uri);
 
-            return isChanged
-              ? diagnostics.some(
-                (diagnostic) =>
-                  diagnostic.severity === vscode.DiagnosticSeverity.Error ||
-                  (config.commitValidationLevel === "warning" &&
-                    diagnostic.severity === vscode.DiagnosticSeverity.Warning)
-              )
-              : false;
-          });
+  if (changedUris.length === 0) return;
 
-        if (diagnostics.length > 0) {
-          return;
-        }
-      }
+  if (config.commitValidationLevel !== "none") {
+    const diagnostics = vscode.languages
+      .getDiagnostics()
+      .filter(([uri, diagnostics]) => {
+        const isChanged = changedUris.find(
+          (changedUri) =>
+            changedUri.toString().localeCompare(uri.toString()) === 0
+        );
 
-      let currentTime = DateTime.now();
+        return isChanged
+          ? diagnostics.some(
+            (diagnostic) =>
+              diagnostic.severity === vscode.DiagnosticSeverity.Error ||
+              (config.commitValidationLevel === "warning" &&
+                diagnostic.severity === vscode.DiagnosticSeverity.Warning)
+          )
+          : false;
+      });
 
-      // Ensure that the commit dates are formatted
-      // as UTC, so that other clients can properly
-      // re-offset them based on the user's locale.
-      const commitDate = currentTime.toUTC().toString();
-      process.env.GIT_AUTHOR_DATE = commitDate;
-      process.env.GIT_COMMITTER_DATE = commitDate;
-
-      if (config.timeZone) {
-        currentTime = currentTime.setZone(config.timeZone);
-      }
-
-      let commitMessage = message || currentTime.toFormat(config.commitMessageFormat);
-
-      if (config.aiEnabled) {
-        const aiMessage = await generateCommitMessage(repository, changedUris);
-        if (aiMessage) {
-          commitMessage = aiMessage;
-        }
-      }
-
-      await repository.commit(commitMessage, { all: true });
-
-      delete process.env.GIT_AUTHOR_DATE;
-      delete process.env.GIT_COMMITTER_DATE;
-
-      if (config.autoPush === "onCommit") {
-        await pushRepository(repository);
-      }
-
-      if (config.autoPull === "onCommit") {
-        await pullRepository(repository);
-      }
+    if (diagnostics.length > 0) {
+      return;
     }
+  }
+
+  let currentTime = DateTime.now();
+
+  // Ensure that the commit dates are formatted
+  // as UTC, so that other clients can properly
+  // re-offset them based on the user's locale.
+  const commitDate = currentTime.toUTC().toString();
+  process.env.GIT_AUTHOR_DATE = commitDate;
+  process.env.GIT_COMMITTER_DATE = commitDate;
+
+  if (config.timeZone) {
+    currentTime = currentTime.setZone(config.timeZone);
+  }
+
+  let commitMessage = message || currentTime.toFormat(config.commitMessageFormat);
+
+  if (config.aiEnabled) {
+    const aiMessage = await generateCommitMessage(repository, changedUris);
+    if (aiMessage) {
+      commitMessage = aiMessage;
+    }
+  }
+
+  await repository.commit(commitMessage, { all: true });
+
+  delete process.env.GIT_AUTHOR_DATE;
+  delete process.env.GIT_COMMITTER_DATE;
+
+  if (config.autoPush === "onCommit") {
+    await pushRepository(repository);
+  }
+
+  if (config.autoPull === "onCommit") {
+    await pullRepository(repository);
   }
 }
 
