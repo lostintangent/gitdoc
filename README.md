@@ -53,7 +53,7 @@ By default, when you enable `GitDoc`, it will automatically pull changes from th
 
 By default, GitDoc generates commit messages based on the day and time that they're committed. However, it can also use AI to generate commit messages based on contents of the changes you make. If you'd like to enable this capability, simply install the Copilot extension, and then enable the `GitDoc > AI: Enabled` setting. Once complete, you'll notice that your auto-commits now have semantic/friendly messages.
 
-By default, GitDoc uses `gpt-4o` for generating commit messages, but you can only try out other models (e.g. `o1`, `claude-3.5-sonnet`) by changing the `GitDoc > AI: Model` setting. Additionally, if you'd like to instruct GitDoc to use specific stylistic preferences, then you can set the `GitDoc > AI: Custom Instructions` setting to include some additional guidances (e.g. "Prefix the messages with an emoji").
+By default, GitDoc uses `gpt-4o` for generating commit messages, but you can only try out other models (e.g. `o1`, `claude-3.5-sonnet`) by changing the `GitDoc > AI: Model` setting. Additionally, if you'd like to prepend an emoji to the AI-generated commit messages, then enable the `GitDoc > AI: Use Emojis` setting. And if you'd like to provide GitDoc with more specific stylistic preferences, then you can set the `GitDoc > AI: Custom Instructions` setting to include any additional guidance (e.g. "Use only lowercase letters").
 
 ## Squashing versions
 
@@ -128,3 +128,5 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc > AI: Model` - Specifies the AI model to use when generating commit messages. This setting only applies when `GitDoc > AI: Enabled` is set to `true`. Defaults to `gpt-4o`.
 
 - `GitDoc > AI: Custom Instructions` - Specifies custom instructions to use when generating commit messages (e.g. use conventional commit syntax, use emojis). This setting only applies when `GitDoc > AI: Enabled` is set to `true`."
+
+- `GitDoc > AI: Use Emojis` - Specifies whether to prepend AI-generated commit messages with an emoji. This setting only applies when `GitDoc > AI: Enabled` is set to `true`. Defaults to `false`.

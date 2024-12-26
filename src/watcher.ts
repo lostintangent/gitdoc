@@ -86,11 +86,11 @@ ${fileDiff}`;
 
   const prompt = `# Base Instructions
 
-* Summarize the following source code diffs into a single concise sentence that describes the essence of the changes that were made.
-* Always start the summary with a present tense verb such as "Update", "Fix", "Modify", "Add", "Improve", "Organize", "Arrange", etc.
-* Respond in plain text, with no markdown formatting, and without any extra content. Simply respond with the summary, and without a trailing period.
+* Summarize the following source code diffs into a single concise sentence that describes the essence of the changes that were made, and can be used as a commit message.
+* Always start the commit message with a present tense verb such as "Update", "Fix", "Modify", "Add", "Improve", "Organize", "Arrange", etc.
+* Respond in plain text, with no markdown formatting, and without any extra content. Simply respond with the commit message, and without a trailing period.
 * Don't reference the file paths that were changed, but make sure summarize all significant changes.
-
+${config.aiUseEmojis ? "* Prepend an emoji to the message that best expresses the nature of the changes, and is as specific to the subject and action of the changes as possible.\n" : ""}
 # Code change diffs
 
 ${diffs.join("\n\n")}
@@ -99,7 +99,7 @@ ${config.aiCustomInstructions ? `# User-Provided Instructions (Important!)
   
 ${config.aiCustomInstructions}
 ` : ""}
-# Summary
+# Commit message
 
 `;
 

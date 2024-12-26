@@ -70,4 +70,7 @@ export default {
   get aiCustomInstructions() {
     return config().get("ai.customInstructions", null);
   },
+  get aiUseEmojis() {
+    return config().get("ai.useEmojis", false);
+  }
 };

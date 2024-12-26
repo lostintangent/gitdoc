@@ -1,6 +1,11 @@
+## v0.2.3 (12/26/2024)
+
+- Introduced a new `GitDoc > AI: Use Emojis` setting, to alloq prepending AI-generated commit messages with an emoji.
+
 ## v0.2.2 (12/26/2024)
 
 - Introduced a new `GitDoc > AI: Custom Instructions` setting, to allow configuring the style/format of the AI-generated commit mesa
+
 ## v0.2.1 (12/26/2024)
 
 - Introduced a new `GitDoc: Commit` command, to manually trigger a commit, as opposed to waiting until the next auto-commit
