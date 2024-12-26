@@ -84,18 +84,21 @@ ${fileDiff}`;
   const model = await vscode.lm.selectChatModels({ family: config.aiModel });
   if (!model || model.length === 0) return null;
 
-  const prompt = `# Base Instructions
+  const prompt = `# Instructions
 
-* Summarize the following source code diffs into a single concise sentence that describes the essence of the changes that were made, and can be used as a commit message.
-* Always start the commit message with a present tense verb such as "Update", "Fix", "Modify", "Add", "Improve", "Organize", "Arrange", etc.
+You are a developer working on a project that uses Git for version control. You have made some changes to the codebase and are preparing to commit them to the repository. Your task is to summarize the changes that you have made into a concise commit message that describes the essence of the changes that were made.
+
+* Always start the commit message with a present tense verb such as "Update", "Fix", "Modify", "Add", "Improve", "Organize", "Arrange", "Mark", etc.
 * Respond in plain text, with no markdown formatting, and without any extra content. Simply respond with the commit message, and without a trailing period.
-* Don't reference the file paths that were changed, but make sure summarize all significant changes.
-${config.aiUseEmojis ? "* Prepend an emoji to the message that best expresses the nature of the changes, and is as specific to the subject and action of the changes as possible.\n" : ""}
+* Don't reference the file paths that were changed, but make sure summarize all significant changes (using your best judgement).
+* When multiple files have been changed, give priority to edited files, followed by added files, and then renamed/deleted files.
+* When a change includes adding an emoji to a list item in markdown, then interpret a runner emoji as marking it as in progress, a checkmark emoji as meaning its completed, and a muscle emoji as meaning its a stretch goal.
+${config.aiUseEmojis ? "* Prepend an emoji to the message that expresses the nature of the changes, and is as specific/relevant to the subject and/or action of the changes as possible.\n" : ""}
 # Code change diffs
 
 ${diffs.join("\n\n")}
 
-${config.aiCustomInstructions ? `# User-Provided Instructions (Important!)
+${config.aiCustomInstructions ? `# Additional Instructions (Important!)
   
 ${config.aiCustomInstructions}
 ` : ""}
@@ -118,6 +121,10 @@ ${config.aiCustomInstructions}
 }
 
 export async function commit(repository: Repository, message?: string) {
+  // This function shouldn't ever be called when GitDoc
+  // is disabled, but we're checking it just in case.
+  if (store.enabled === false) return;
+
   const changes = [
     ...repository.state.workingTreeChanges,
     ...repository.state.mergeChanges,
@@ -192,6 +199,7 @@ export async function commit(repository: Repository, message?: string) {
   }
 }
 
+// TODO: Clear the timeout when GitDoc is disabled.
 function debounce(fn: Function, delay: number) {
   let timeout: NodeJS.Timeout | null = null;
 
