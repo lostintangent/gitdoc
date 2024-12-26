@@ -1,3 +1,9 @@
+## v0.2.1 (12/26/2024)
+
+- Introduced a new `GitDoc: Commit` command, to manually trigger a commit, as opposed to waiting until the next auto-commit
+- Introduced a new `GotDoc: No Verify` setting, which allows suppressing git hooks for GitDoc-generated commits
+- GitDoc now checks whether a git repo has remotes before trying to push/pull
+
 ## v0.2.0 (12/26/2024)
 
 - Introduced the ability to generate semantic commit messages with AI

@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "extensionKind": [
     "workspace"
   ],
@@ -130,7 +130,7 @@
         "gitdoc.noVerify": {
           "type": "boolean",
           "default": false,
-          "description": "Specifies whether to ignore configured Git-Hooks"
+          "markdownDescription": "Specifies whether to ignore any configured git hooks. Defaults to `false`."
         },
         "gitdoc.pullOnOpen": {
           "type": "boolean",

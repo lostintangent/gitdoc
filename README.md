@@ -119,6 +119,8 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 
 - `GitDoc: Exclude Branches` - Specifies a list of branches that should be excluded from auto-commits. This allows you to prevent auto-commits on specific branches, ensuring that your work on these branches remains manual. This is particularly useful for branches where you want to have more control over the commits, such as production or release branches. Defaults to `[]`.
 
+- `GitDoc: No Verify` - Specifies whether to ignore any configured git hooks. Defaults to `false`.
+
 ### AI Settings
 
 - `GitDoc > AI: Enabled` - Specifies whether to use AI to generate commit messages. This setting only applies when you have the Copilot extension installed and setup.
