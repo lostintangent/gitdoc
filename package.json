@@ -4,7 +4,7 @@
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
   "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "extensionKind": [
     "workspace"
   ],
@@ -13,7 +13,7 @@
     "url": "https://github.com/lostintangent/gitdoc.git"
   },
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.90.0"
   },
   "categories": [
     "Other"
@@ -25,7 +25,7 @@
     "git"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -59,7 +59,7 @@
         "gitdoc.autoCommitDelay": {
           "type": "number",
           "default": 30000,
-          "description": "Controls the delay in ms after which any changes are automatically committed. Only applies when `GitDoc: Enabled` is set to `true`."
+          "markdownDescription": "Controls the delay in ms after which any changes are automatically committed. Only applies when `GitDoc: Enabled` is set to `true`."
         },
         "gitdoc.autoPull": {
           "type": "string",
@@ -75,7 +75,7 @@
         "gitdoc.autoPullDelay": {
           "type": "number",
           "default": 30000,
-          "description": "Controls the delay in ms after which any commits are automatically pulled. Only applies when `GitDoc: Auto Pull` is set to `afterDelay`."
+          "markdownDescription": "Controls the delay in ms after which any commits are automatically pulled. Only applies when `GitDoc: Auto Pull` is set to `afterDelay`."
         },
         "gitdoc.autoPush": {
           "type": "string",
@@ -90,7 +90,7 @@
         "gitdoc.autoPushDelay": {
           "type": "number",
           "default": 30000,
-          "description": "Controls the delay in ms after which any commits are automatically pushed. Only applies when `GitDoc: Auto Push` is set to `afterDelay`."
+          "markdownDescription": "Controls the delay in ms after which any commits are automatically pushed. Only applies when `GitDoc: Auto Push` is set to `afterDelay`."
         },
         "gitdoc.commitMessageFormat": {
           "type": "string",
@@ -146,6 +146,23 @@
           "type": "array",
           "default": [],
           "description": "Specifies a list of branches that should be excluded from auto-commits."
+        },
+        "gitdoc.ai.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Specifies whether to use AI to generate commit messages. This setting only applies when you have the Copilot extension installed and setup."
+        },
+        "gitdoc.ai.model": {
+          "type": "string",
+          "default": "gpt-4o",
+          "enum": [
+            "gpt-4o",
+            "o1-ga",
+            "o1-mini",
+            "claude-3.5-sonnet",
+            "gemini-1.5-pro"
+          ],
+          "markdownDescription": "Specifies the AI model to use when generating commit messages. This setting only applies when `GitDoc > AI: Enabled` is set to `true`. Defaults to `gpt-4o`."
         }
       }
     },
@@ -202,13 +219,12 @@
     "@types/luxon": "^2.0.5",
     "@types/minimatch": "^3.0.3",
     "@types/node": "^18.6.5",
-    "@types/vscode": "1.70.0",
+    "@types/vscode": "1.90.0",
     "tslint": "^5.8.0",
     "typescript": "^4.7.4",
     "vsce": "^2.10.0"
   },
   "dependencies": {
-    "debounce": "^1.2.0",
     "luxon": "^2.0.2",
     "minimatch": "^3.0.4",
     "mobx": "^5.14.2"

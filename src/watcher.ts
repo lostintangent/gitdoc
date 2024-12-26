@@ -1,4 +1,3 @@
-import { debounce } from "debounce";
 import * as vscode from "vscode";
 import config from "./config";
 import { ForcePushMode, GitAPI, Repository } from "./git";
@@ -62,6 +61,46 @@ function matches(uri: vscode.Uri) {
   return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
+async function generateCommitMessage(repository: Repository, changedUris: vscode.Uri[]): Promise<string | null> {
+  const diffs = await Promise.all(
+    changedUris.map(async (uri) => {
+      const filePath = vscode.workspace.asRelativePath(uri);
+      const fileDiff = await repository.diffWithHEAD(filePath);
+
+      return `## ${filePath}
+---
+${fileDiff}`;
+    }));
+
+  const model = await vscode.lm.selectChatModels({ family: config.aiModel });
+  if (!model || model.length === 0) return null;
+
+  const prompt = `# Instructions:
+---
+Summarize the following code diffs into a single concise sentence that describes the essence of the changes that were made. Always start the summary with a present tense verb such as "Update", "Fix", "Modify", "Add", etc. Respond in plain text, with no markdown formatting, and without any extra content. Simply response with the summary, and don't reference the file paths that were changed. But it's important that you summarize all files.
+
+# Change diffs:
+---
+${diffs.join("\n\n")}
+
+# Summary:
+---
+`;
+
+  const response = await model[0].sendRequest([{
+    role: vscode.LanguageModelChatMessageRole.User,
+    name: "User",
+    content: prompt
+  }]);
+
+  let summary = "";
+  for await (const part of response.text) {
+    summary += part;
+  }
+
+  return summary;
+}
+
 export async function commit(repository: Repository, message?: string) {
   const changes = [
     ...repository.state.workingTreeChanges,
@@ -69,68 +108,86 @@ export async function commit(repository: Repository, message?: string) {
     ...repository.state.indexChanges,
   ];
 
-  if (changes.length > 0) {
-    const changedUris = changes
-      .filter((change) => matches(change.uri))
-      .map((change) => change.uri);
+  if (changes.length === 0) return;
 
-    if (changedUris.length > 0) {
-      if (config.commitValidationLevel !== "none") {
-        const diagnostics = vscode.languages
-          .getDiagnostics()
-          .filter(([uri, diagnostics]) => {
-            const isChanged = changedUris.find(
-              (changedUri) =>
-                changedUri.toString().localeCompare(uri.toString()) === 0
-            );
+  const changedUris = changes
+    .filter((change) => matches(change.uri))
+    .map((change) => change.uri);
 
-            return isChanged
-              ? diagnostics.some(
-                (diagnostic) =>
-                  diagnostic.severity === vscode.DiagnosticSeverity.Error ||
-                  (config.commitValidationLevel === "warning" &&
-                    diagnostic.severity === vscode.DiagnosticSeverity.Warning)
-              )
-              : false;
-          });
+  if (changedUris.length === 0) return;
 
-        if (diagnostics.length > 0) {
-          return;
-        }
-      }
+  if (config.commitValidationLevel !== "none") {
+    const diagnostics = vscode.languages
+      .getDiagnostics()
+      .filter(([uri, diagnostics]) => {
+        const isChanged = changedUris.find(
+          (changedUri) =>
+            changedUri.toString().localeCompare(uri.toString()) === 0
+        );
 
-      // @ts-ignore
-      await repository.repository.add(changedUris);
-      let currentTime = DateTime.now();
+        return isChanged
+          ? diagnostics.some(
+            (diagnostic) =>
+              diagnostic.severity === vscode.DiagnosticSeverity.Error ||
+              (config.commitValidationLevel === "warning" &&
+                diagnostic.severity === vscode.DiagnosticSeverity.Warning)
+          )
+          : false;
+      });
 
-      // Ensure that the commit dates are formatted
-      // as UTC, so that other clients can properly
-      // re-offset them based on the user's locale.
-      const commitDate = currentTime.toUTC().toString();
-      process.env.GIT_AUTHOR_DATE = commitDate;
-      process.env.GIT_COMMITTER_DATE = commitDate;
-
-      if (config.timeZone) {
-        currentTime = currentTime.setZone(config.timeZone);
-      }
-
-      const commitMessage =
-        message || currentTime.toFormat(config.commitMessageFormat);
-
-      await repository.commit(commitMessage);
-
-      delete process.env.GIT_AUTHOR_DATE;
-      delete process.env.GIT_COMMITTER_DATE;
-
-      if (config.autoPush === "onCommit") {
-        await pushRepository(repository);
-      }
-
-      if (config.autoPull === "onCommit") {
-        await pullRepository(repository);
-      }
+    if (diagnostics.length > 0) {
+      return;
     }
   }
+
+  let currentTime = DateTime.now();
+
+  // Ensure that the commit dates are formatted
+  // as UTC, so that other clients can properly
+  // re-offset them based on the user's locale.
+  const commitDate = currentTime.toUTC().toString();
+  process.env.GIT_AUTHOR_DATE = commitDate;
+  process.env.GIT_COMMITTER_DATE = commitDate;
+
+  if (config.timeZone) {
+    currentTime = currentTime.setZone(config.timeZone);
+  }
+
+  let commitMessage = message || currentTime.toFormat(config.commitMessageFormat);
+
+  if (config.aiEnabled) {
+    const aiMessage = await generateCommitMessage(repository, changedUris);
+    if (aiMessage) {
+      commitMessage = aiMessage;
+    }
+  }
+
+  await repository.commit(commitMessage, { all: true });
+
+  delete process.env.GIT_AUTHOR_DATE;
+  delete process.env.GIT_COMMITTER_DATE;
+
+  if (config.autoPush === "onCommit") {
+    await pushRepository(repository);
+  }
+
+  if (config.autoPull === "onCommit") {
+    await pullRepository(repository);
+  }
+}
+
+function debounce(fn: Function, delay: number) {
+  let timeout: NodeJS.Timeout | null = null;
+
+  return (...args: any[]) => {
+    if (timeout) {
+      clearTimeout(timeout);
+    }
+
+    timeout = setTimeout(() => {
+      fn(...args);
+    }, delay);
+  };
 }
 
 const commitMap = new Map();
@@ -138,9 +195,7 @@ function debouncedCommit(repository: Repository) {
   if (!commitMap.has(repository)) {
     commitMap.set(
       repository,
-      debounce(async () => {
-        commit(repository);
-      }, config.autoCommitDelay)
+      debounce(() => commit(repository), config.autoCommitDelay)
     );
   }
 
@@ -225,8 +280,8 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
       const suffix = store.isPushing
         ? " (Pushing...)"
         : store.isPulling
-        ? " (Pulling...)"
-        : "";
+          ? " (Pulling...)"
+          : "";
       statusBarItem!.text = `$(mirror)${suffix}`;
     }
   );

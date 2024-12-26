@@ -1,3 +1,8 @@
+## v0.2.0 (12/26/2024)
+
+- Introduced the ability to generate semantic commit messages with AI
+- The `GitDoc: Auto Commit Delay` and `GitDoc: File Pattern` settings now take affect immediately whenever you change them
+
 ## v0.1.0 (08/10/2022)
 
 - Fixed a bug with VS Code v1.70
