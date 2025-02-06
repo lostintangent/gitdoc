@@ -48,10 +48,21 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(git.onDidOpenRepository(() => checkEnabled(git)));
   context.subscriptions.push(git.onDidCloseRepository(() => checkEnabled(git)));
 
+  // Create a debounced version of updateStatusBarItem
+  let updateTimeout: NodeJS.Timeout | null = null;
+  const debouncedUpdateStatusBar = (editor: vscode.TextEditor | undefined) => {
+    if (updateTimeout) {
+      clearTimeout(updateTimeout);
+    }
+    updateTimeout = setTimeout(() => {
+      updateStatusBarItem(editor);
+    }, 50); // 50ms debounce
+  };
+
   // Watch for active editor changes to update icon state
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      updateStatusBarItem(editor);
+      debouncedUpdateStatusBar(editor);
     })
   );
 
@@ -67,7 +78,7 @@ export async function activate(context: vscode.ExtensionContext) {
     (enabled) => {
       updateContext(enabled, true);
       checkEnabled(git);
-      updateStatusBarItem(vscode.window.activeTextEditor);
+      debouncedUpdateStatusBar(vscode.window.activeTextEditor);
     }
   );
 
@@ -78,7 +89,7 @@ export async function activate(context: vscode.ExtensionContext) {
         e.affectsConfiguration("gitdoc.autoCommitDelay") ||
         e.affectsConfiguration("gitdoc.filePattern")) {
         checkEnabled(git);
-        updateStatusBarItem(vscode.window.activeTextEditor);
+        debouncedUpdateStatusBar(vscode.window.activeTextEditor);
       }
     })
   );

@@ -262,6 +262,7 @@ export function updateStatusBarItem(editor: vscode.TextEditor | undefined) {
   // Icon states:
   // - Enabled + Matching file: Show mirror
   // - Enabled + Non-matching file: Show mirror with circle-slash overlay using ~
+  // var icon = "$(mirror)";
   const icon = isMatchingFile ? "$(mirror)" : "$(mirror) $(circle-slash)";
   
   statusBarItem.text = `${icon}${suffix}`;
