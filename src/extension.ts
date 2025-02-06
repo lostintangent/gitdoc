@@ -4,7 +4,7 @@ import { registerCommands } from "./commands";
 import config from "./config";
 import { getGitApi, GitAPI, RefType } from "./git";
 import { store } from "./store";
-import { commit, watchForChanges } from "./watcher";
+import { commit, watchForChanges, ensureStatusBarItem } from "./watcher";
 import { updateContext } from "./utils";
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -13,9 +13,14 @@ export async function activate(context: vscode.ExtensionContext) {
     return;
   }
 
-  // Initialize the store based on the
-  // user/workspace configuration.
+  // Initialize the store and context based on the configuration
   store.enabled = config.enabled;
+  updateContext(config.enabled, false); // Set initial context to match config
+
+  // Create status bar item and show it immediately
+  const statusBar = ensureStatusBarItem();
+  statusBar.show();
+  context.subscriptions.push(statusBar);
 
   registerCommands(context);
 
@@ -25,9 +30,16 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(git.onDidOpenRepository(() => checkEnabled(git)));
   context.subscriptions.push(git.onDidCloseRepository(() => checkEnabled(git)));
 
+  // Initial check of enabled state
+  await checkEnabled(git);
+
+  // Watch for store changes
   reaction(
-    () => [store.enabled],
-    () => checkEnabled(git)
+    () => store.enabled,
+    (enabled) => {
+      updateContext(enabled, true);
+      checkEnabled(git);
+    }
   );
 
   context.subscriptions.push(

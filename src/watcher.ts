@@ -232,48 +232,39 @@ export function ensureStatusBarItem() {
     statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left
     );
-
-    statusBarItem.text = "$(mirror)";
-    statusBarItem.tooltip = "GitDoc: Auto-commiting files on save";
-    statusBarItem.command = "gitdoc.disable";
+    updateStatusBarItem();
     statusBarItem.show();
   }
-
   return statusBarItem;
 }
+
+function updateStatusBarItem() {
+  if (!statusBarItem) return;
+  
+  const enabled = store.enabled;
+  const suffix = store.isPushing
+    ? " (Pushing...)"
+    : store.isPulling
+      ? " (Pulling...)"
+      : "";
+  
+  statusBarItem.text = `${enabled ? "$(mirror)" : "$(sync-ignored)"}${suffix}`;
+  statusBarItem.tooltip = `GitDoc: ${enabled ? "Auto-committing files on save" : "Click to enable auto-commit"}`;
+  statusBarItem.command = enabled ? "gitdoc.disable" : "gitdoc.enable";
+}
+
+// Add reaction to store changes
+reaction(
+  () => [store.enabled, store.isPushing, store.isPulling],
+  () => {
+    updateStatusBarItem();
+  }
+);
 
 let disposables: vscode.Disposable[] = [];
 export function watchForChanges(git: GitAPI): vscode.Disposable {
   const commitAfterDelay = debouncedCommit(git.repositories[0]);
   disposables.push(git.repositories[0].state.onDidChange(commitAfterDelay));
-
-  ensureStatusBarItem();
-
-  disposables.push(
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor && matches(editor.document.uri)) {
-        statusBarItem?.show();
-      } else {
-        statusBarItem?.hide();
-      }
-    })
-  );
-
-  if (
-    vscode.window.activeTextEditor &&
-    matches(vscode.window.activeTextEditor.document.uri)
-  ) {
-    statusBarItem?.show();
-  } else {
-    statusBarItem?.hide();
-  }
-
-  disposables.push({
-    dispose: () => {
-      statusBarItem?.dispose();
-      statusBarItem = null;
-    },
-  });
 
   if (config.autoPush === "afterDelay") {
     const interval = setInterval(async () => {
@@ -297,22 +288,6 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
       dispose: () => clearInterval(interval),
     });
   }
-
-  const reactionDisposable = reaction(
-    () => [store.isPushing, store.isPulling],
-    () => {
-      const suffix = store.isPushing
-        ? " (Pushing...)"
-        : store.isPulling
-          ? " (Pulling...)"
-          : "";
-      statusBarItem!.text = `$(mirror)${suffix}`;
-    }
-  );
-
-  disposables.push({
-    dispose: reactionDisposable,
-  });
 
   if (config.pullOnOpen) {
     pullRepository(git.repositories[0]);
