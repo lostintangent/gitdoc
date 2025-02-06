@@ -14,14 +14,26 @@ function matches(uri: vscode.Uri) {
 }
 
 export async function activate(context: vscode.ExtensionContext) {
+  // Wait for Git extension to be ready
   const git = await getGitApi();
   if (!git) {
     return;
   }
 
+  // Wait for initial repository to be available
+  if (git.repositories.length === 0) {
+    await new Promise<void>((resolve) => {
+      const disposable = git.onDidOpenRepository(() => {
+        disposable.dispose();
+        resolve();
+      });
+    });
+  }
+
   // Initialize the store and context based on the configuration
-  store.enabled = config.enabled;
-  updateContext(config.enabled, false); // Set initial context to match config
+  const initialEnabled = vscode.workspace.getConfiguration('gitdoc').get('enabled', false);
+  store.enabled = initialEnabled;
+  updateContext(initialEnabled, false); // Set initial context to match config
 
   // Create status bar item and show it immediately
   const statusBar = ensureStatusBarItem();
