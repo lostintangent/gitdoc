@@ -77,7 +77,13 @@ If you've made a bunch of changes to a file, and want to restore an older versio
 
 ## Status Bar
 
-Whenever `GitDoc` is enabled, it will contribute a status bar item to your status bar. This simply indicates that it's enabled, and makes it easier for you to know which "versioning mode" you're in (auto-commit vs. manual commit). Additionally, if you enable [auto-pushing](#auto-pushing), then the status bar will indicate when it's syncing your commits with your repo. If you click the `GitDoc` status bar item, this will disable `GitDoc`. This allows you to easily enable GitDoc for a period of time, and then quickly turn it off.
+Whenever `GitDoc` is installed, it will contribute a status bar item to your status bar. The status bar icon changes based on the current state:
+
+- When disabled: Shows a "sync-ignored" icon ($(sync-ignored))
+- When enabled and viewing a matching file: Shows a "mirror" icon ($(mirror))
+- When enabled but viewing a non-matching file: Shows a "mirror" icon with a circle-slash next to it ($(mirror) $(circle-slash))
+
+Additionally, if you enable [auto-pushing](#auto-pushing), then the status bar will indicate when it's syncing your commits with your repo. If you click the `GitDoc` status bar item, this will toggle between enabled and disabled states. This allows you to easily enable GitDoc for a period of time, and then quickly turn it off.
 
 ## Contributed Commands
 
