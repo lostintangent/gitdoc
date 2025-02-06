@@ -232,32 +232,48 @@ export function ensureStatusBarItem() {
     statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left
     );
-    updateStatusBarItem();
+    updateStatusBarItem(vscode.window.activeTextEditor);
     statusBarItem.show();
   }
   return statusBarItem;
 }
 
-function updateStatusBarItem() {
+export function updateStatusBarItem(editor: vscode.TextEditor | undefined) {
   if (!statusBarItem) return;
   
   const enabled = store.enabled;
+  const isMatchingFile = editor && matches(editor.document.uri);
+  
+  // Set the base state first (before any async operations might trigger)
+  if (!enabled) {
+    statusBarItem.text = "$(sync-ignored)";
+    statusBarItem.tooltip = "GitDoc: Click to enable auto-commit";
+    statusBarItem.command = "gitdoc.enable";
+    return;
+  }
+
+  // Handle enabled state
   const suffix = store.isPushing
     ? " (Pushing...)"
     : store.isPulling
       ? " (Pulling...)"
       : "";
   
-  statusBarItem.text = `${enabled ? "$(mirror)" : "$(sync-ignored)"}${suffix}`;
-  statusBarItem.tooltip = `GitDoc: ${enabled ? "Auto-committing files on save" : "Click to enable auto-commit"}`;
-  statusBarItem.command = enabled ? "gitdoc.disable" : "gitdoc.enable";
+  // Icon states:
+  // - Enabled + Matching file: Show mirror
+  // - Enabled + Non-matching file: Show mirror with circle-slash overlay using ~
+  const icon = isMatchingFile ? "$(mirror)" : "$(mirror) $(circle-slash)";
+  
+  statusBarItem.text = `${icon}${suffix}`;
+  statusBarItem.tooltip = `GitDoc: ${isMatchingFile ? "Auto-committing this file on save" : "This file is not auto-committed"}`;
+  statusBarItem.command = "gitdoc.disable";
 }
 
 // Add reaction to store changes
 reaction(
   () => [store.enabled, store.isPushing, store.isPulling],
   () => {
-    updateStatusBarItem();
+    updateStatusBarItem(vscode.window.activeTextEditor);
   }
 );
 

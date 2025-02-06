@@ -4,8 +4,14 @@ import { registerCommands } from "./commands";
 import config from "./config";
 import { getGitApi, GitAPI, RefType } from "./git";
 import { store } from "./store";
-import { commit, watchForChanges, ensureStatusBarItem } from "./watcher";
+import { commit, watchForChanges, ensureStatusBarItem, updateStatusBarItem } from "./watcher";
 import { updateContext } from "./utils";
+import * as minimatch from "minimatch";
+
+// Helper function for file pattern matching
+function matches(uri: vscode.Uri) {
+  return minimatch(uri.path, config.filePattern, { dot: true });
+}
 
 export async function activate(context: vscode.ExtensionContext) {
   const git = await getGitApi();
@@ -30,6 +36,16 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(git.onDidOpenRepository(() => checkEnabled(git)));
   context.subscriptions.push(git.onDidCloseRepository(() => checkEnabled(git)));
 
+  // Watch for active editor changes to update icon state
+  context.subscriptions.push(
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      updateStatusBarItem(editor);
+    })
+  );
+
+  // Set initial icon state
+  updateStatusBarItem(vscode.window.activeTextEditor);
+
   // Initial check of enabled state
   await checkEnabled(git);
 
@@ -39,6 +55,7 @@ export async function activate(context: vscode.ExtensionContext) {
     (enabled) => {
       updateContext(enabled, true);
       checkEnabled(git);
+      updateStatusBarItem(vscode.window.activeTextEditor);
     }
   );
 
@@ -49,6 +66,7 @@ export async function activate(context: vscode.ExtensionContext) {
         e.affectsConfiguration("gitdoc.autoCommitDelay") ||
         e.affectsConfiguration("gitdoc.filePattern")) {
         checkEnabled(git);
+        updateStatusBarItem(vscode.window.activeTextEditor);
       }
     })
   );
