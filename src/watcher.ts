@@ -66,7 +66,7 @@ async function hasRemotes(repository: Repository): Promise<boolean> {
   return refs.some((ref) => ref.type === RefType.RemoteHead);
 }
 
-function matches(uri: vscode.Uri) {
+export function matches(uri: vscode.Uri) {
   return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
@@ -240,10 +240,19 @@ export function ensureStatusBarItem() {
 
 export function updateStatusBarItem(editor: vscode.TextEditor | undefined) {
   if (!statusBarItem) return;
-  
+
   const enabled = store.enabled;
   const isMatchingFile = editor && matches(editor.document.uri);
-  
+
+  // When always show status bar is false and GitDoc is disabled, hide the status bar
+  if (!enabled && !config.alwaysShowStatusBarIcon) {
+    statusBarItem.hide();
+    return;
+  }
+
+  // Ensure the status bar is visible
+  statusBarItem.show();
+
   // Set the base state first (before any async operations might trigger)
   if (!enabled) {
     statusBarItem.text = "$(sync-ignored)";
@@ -258,13 +267,12 @@ export function updateStatusBarItem(editor: vscode.TextEditor | undefined) {
     : store.isPulling
       ? " (Pulling...)"
       : "";
-  
+
   // Icon states:
   // - Enabled + Matching file: Show mirror
   // - Enabled + Non-matching file: Show mirror with circle-slash overlay using ~
-  // var icon = "$(mirror)";
   const icon = isMatchingFile ? "$(mirror)" : "$(mirror) $(circle-slash)";
-  
+
   statusBarItem.text = `${icon}${suffix}`;
   statusBarItem.tooltip = `GitDoc: ${isMatchingFile ? "Auto-committing this file on save" : "This file is not auto-committed"}`;
   statusBarItem.command = "gitdoc.disable";

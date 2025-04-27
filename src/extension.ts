@@ -6,12 +6,6 @@ import { getGitApi, GitAPI, RefType } from "./git";
 import { store } from "./store";
 import { commit, watchForChanges, ensureStatusBarItem, updateStatusBarItem } from "./watcher";
 import { updateContext } from "./utils";
-import * as minimatch from "minimatch";
-
-// Helper function for file pattern matching
-function matches(uri: vscode.Uri) {
-  return minimatch(uri.path, config.filePattern, { dot: true });
-}
 
 export async function activate(context: vscode.ExtensionContext) {
   // Wait for Git extension to be ready
@@ -21,6 +15,7 @@ export async function activate(context: vscode.ExtensionContext) {
   }
 
   // Wait for initial repository to be available
+  // This is needed to fix issue #90 where GitDoc is inactive on codespace start
   if (git.repositories.length === 0) {
     await new Promise<void>((resolve) => {
       const disposable = git.onDidOpenRepository(() => {
@@ -30,14 +25,11 @@ export async function activate(context: vscode.ExtensionContext) {
     });
   }
 
-  // Initialize the store and context based on the configuration
-  const initialEnabled = vscode.workspace.getConfiguration('gitdoc').get('enabled', false);
-  store.enabled = initialEnabled;
-  updateContext(initialEnabled, false); // Set initial context to match config
+  // Initialize the store based on the configuration
+  store.enabled = config.enabled;
 
-  // Create status bar item and show it immediately
+  // Create status bar item and ensure it's properly initialized
   const statusBar = ensureStatusBarItem();
-  statusBar.show();
   context.subscriptions.push(statusBar);
 
   registerCommands(context);
@@ -48,26 +40,12 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(git.onDidOpenRepository(() => checkEnabled(git)));
   context.subscriptions.push(git.onDidCloseRepository(() => checkEnabled(git)));
 
-  // Create a debounced version of updateStatusBarItem
-  let updateTimeout: NodeJS.Timeout | null = null;
-  const debouncedUpdateStatusBar = (editor: vscode.TextEditor | undefined) => {
-    if (updateTimeout) {
-      clearTimeout(updateTimeout);
-    }
-    updateTimeout = setTimeout(() => {
-      updateStatusBarItem(editor);
-    }, 50); // 50ms debounce
-  };
-
   // Watch for active editor changes to update icon state
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      debouncedUpdateStatusBar(editor);
+      updateStatusBarItem(editor);
     })
   );
-
-  // Set initial icon state
-  updateStatusBarItem(vscode.window.activeTextEditor);
 
   // Initial check of enabled state
   await checkEnabled(git);
@@ -76,9 +54,7 @@ export async function activate(context: vscode.ExtensionContext) {
   reaction(
     () => store.enabled,
     (enabled) => {
-      updateContext(enabled, true);
       checkEnabled(git);
-      debouncedUpdateStatusBar(vscode.window.activeTextEditor);
     }
   );
 
@@ -87,9 +63,10 @@ export async function activate(context: vscode.ExtensionContext) {
       if (e.affectsConfiguration("gitdoc.enabled") ||
         e.affectsConfiguration("gitdoc.excludeBranches") ||
         e.affectsConfiguration("gitdoc.autoCommitDelay") ||
-        e.affectsConfiguration("gitdoc.filePattern")) {
+        e.affectsConfiguration("gitdoc.filePattern") ||
+        e.affectsConfiguration("gitdoc.alwaysShowStatusBarIcon")) {
         checkEnabled(git);
-        debouncedUpdateStatusBar(vscode.window.activeTextEditor);
+        updateStatusBarItem(vscode.window.activeTextEditor);
       }
     })
   );
@@ -114,6 +91,7 @@ async function checkEnabled(git: GitAPI) {
     store.enabled && !!branchName && !config.excludeBranches.includes(branchName);
 
   updateContext(enabled, false);
+  updateStatusBarItem(vscode.window.activeTextEditor);
 
   if (enabled) {
     watcher = watchForChanges(git);

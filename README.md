@@ -61,7 +61,7 @@ Auto-committing is useful for tracking unique versions, however, depending on ho
 
 <img width="700px" src="https://user-images.githubusercontent.com/116461/79668805-3c84ab00-816c-11ea-9ec9-845650b999b8.gif" />
 
-> Demystification: Behind the scenes, this command performs a `git reset --soft`, starting at the commit _before_ the selected one. It then runs `git commit -m <message>`, where `message` is the string you specified. This preserves your working directory/index, while "rewritting" the commit history.
+> Demystification: Behind the scenes, this command performs a `git reset --soft`, starting at the commit _before_ the selected one. It then runs `git commit -m <message>`, where `message` is the string you specified. This preserves your working directory/index, while "rewritten" the commit history.
 
 ## Undoing versions
 
@@ -92,6 +92,8 @@ When you install the `GitDoc` extension, the following commands are contributed 
 - `GitDoc: Enable` - Enables auto-commits. This command is only visible when GitDoc isn't already enabled.
 
 - `GitDoc: Disable` - Disables auto-commits. This command is only visible when GitDoc is enabled.
+
+- `GitDoc: Toggle Status Bar Icon Visibility` - Toggles whether the GitDoc status bar icon is always visible or only visible when GitDoc is enabled. This provides a quick way to toggle the `gitdoc.alwaysShowStatusBarIcon` setting.
 
 - `GitDoc: Commit` - Manually commits changes. This command allows you to trigger a commit without waiting for the auto-commit interval.
 
@@ -136,3 +138,14 @@ The following settings enable you to customize the default behavior of `GitDoc`:
 - `GitDoc > AI: Custom Instructions` - Specifies custom instructions to use when generating commit messages (e.g. use conventional commit syntax, use emojis). This setting only applies when `GitDoc > AI: Enabled` is set to `true`."
 
 - `GitDoc > AI: Use Emojis` - Specifies whether to prepend AI-generated commit messages with an emoji. This setting only applies when `GitDoc > AI: Enabled` is set to `true`. Defaults to `false`.
+
+## Configuration Settings
+
+You can customize `GitDoc`'s behavior using the following settings:
+
+| Setting                          | Description                                                                                                                                                                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `gitdoc.enabled`                 | Specifies whether to automatically create a commit each time you save a file.                                                                                                                                                  |
+| `gitdoc.alwaysShowStatusBarIcon` | When true, the status bar icon is always visible (even when GitDoc is disabled), with its appearance changing to indicate the current state. When false (default), the status bar icon is only visible when GitDoc is enabled. |
+| `gitdoc.autoCommitDelay`         | Specifies the number of milliseconds to wait before automatically committing changes.                                                                                                                                          |
+| `gitdoc.filePattern`             | Specifies a glob pattern that indicates the specific files that should be automatically committed.                                                                                                                             |

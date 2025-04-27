@@ -1,3 +1,9 @@
+## 0.2.4 (Unreleased)
+
+- Added new `gitdoc.alwaysShowStatusBarIcon` setting to optionally keep the status bar icon visible when GitDoc is disabled (#89), and improved icon display to properly indicate when viewing files that don't match the file pattern
+- Added new `GitDoc: Toggle Status Bar Icon Visibility` command to quickly toggle the status bar icon visibility
+- Fixed issue where GitDoc was inactive on codespace start despite being enabled in settings (#90)
+
 ## v0.2.3 (12/26/2024)
 
 - Introduced a new `GitDoc > AI: Use Emojis` setting, to alloq prepending AI-generated commit messages with an emoji.
