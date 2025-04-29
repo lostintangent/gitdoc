@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { EXTENSION_NAME } from "./constants";
 import { getGitApi } from "./git";
 import { updateContext } from "./utils";
-import { commit } from "./watcher";
+import { commit, updateStatusBarItem } from "./watcher";
 
 interface GitTimelineItem {
   message: string;
@@ -19,6 +19,26 @@ export function registerCommands(context: vscode.ExtensionContext) {
 
   registerCommand("enable", updateContext.bind(null, true));
   registerCommand("disable", updateContext.bind(null, false));
+
+  registerCommand("toggleStatusBarIcon", async () => {
+    // Get the current setting value
+    const currentValue = vscode.workspace.getConfiguration("gitdoc").get("alwaysShowStatusBarIcon", false);
+
+    // Toggle the setting
+    await vscode.workspace.getConfiguration("gitdoc").update(
+      "alwaysShowStatusBarIcon",
+      !currentValue,
+      vscode.ConfigurationTarget.Global
+    );
+
+    // Show notification to the user
+    vscode.window.showInformationMessage(
+      `GitDoc: Status bar icon will ${!currentValue ? "always" : "only"} be visible ${!currentValue ? "even when disabled" : "when enabled"}`
+    );
+
+    // Update the status bar immediately
+    updateStatusBarItem(vscode.window.activeTextEditor);
+  });
 
   registerCommand("restoreVersion", async (item: GitTimelineItem) => {
     if (!vscode.window.activeTextEditor) {

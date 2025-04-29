@@ -28,6 +28,9 @@ export default {
   get autoPushDelay(): number {
     return config().get("autoPushDelay", DEFAULT_DELAY_MS);
   },
+  get alwaysShowStatusBarIcon(): boolean {
+    return config().get("alwaysShowStatusBarIcon", false);
+  },
   get commitMessageFormat(): string {
     return config().get("commitMessageFormat", "lll");
   },

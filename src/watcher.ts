@@ -66,7 +66,7 @@ async function hasRemotes(repository: Repository): Promise<boolean> {
   return refs.some((ref) => ref.type === RefType.RemoteHead);
 }
 
-function matches(uri: vscode.Uri) {
+export function matches(uri: vscode.Uri) {
   return minimatch(uri.path, config.filePattern, { dot: true });
 }
 
@@ -232,48 +232,64 @@ export function ensureStatusBarItem() {
     statusBarItem = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left
     );
-
-    statusBarItem.text = "$(mirror)";
-    statusBarItem.tooltip = "GitDoc: Auto-commiting files on save";
-    statusBarItem.command = "gitdoc.disable";
+    updateStatusBarItem(vscode.window.activeTextEditor);
     statusBarItem.show();
   }
-
   return statusBarItem;
 }
+
+export function updateStatusBarItem(editor: vscode.TextEditor | undefined) {
+  if (!statusBarItem) return;
+
+  const enabled = store.enabled;
+  const isMatchingFile = editor && matches(editor.document.uri);
+
+  // When always show status bar is false and GitDoc is disabled, hide the status bar
+  if (!enabled && !config.alwaysShowStatusBarIcon) {
+    statusBarItem.hide();
+    return;
+  }
+
+  // Ensure the status bar is visible
+  statusBarItem.show();
+
+  // Set the base state first (before any async operations might trigger)
+  if (!enabled) {
+    statusBarItem.text = "$(sync-ignored)";
+    statusBarItem.tooltip = "GitDoc: Click to enable auto-commit";
+    statusBarItem.command = "gitdoc.enable";
+    return;
+  }
+
+  // Handle enabled state
+  const suffix = store.isPushing
+    ? " (Pushing...)"
+    : store.isPulling
+      ? " (Pulling...)"
+      : "";
+
+  // Icon states:
+  // - Enabled + Matching file: Show mirror
+  // - Enabled + Non-matching file: Show mirror with circle-slash overlay using ~
+  const icon = isMatchingFile ? "$(mirror)" : "$(mirror) $(circle-slash)";
+
+  statusBarItem.text = `${icon}${suffix}`;
+  statusBarItem.tooltip = `GitDoc: ${isMatchingFile ? "Auto-committing this file on save" : "This file is not auto-committed"}`;
+  statusBarItem.command = "gitdoc.disable";
+}
+
+// Add reaction to store changes
+reaction(
+  () => [store.enabled, store.isPushing, store.isPulling],
+  () => {
+    updateStatusBarItem(vscode.window.activeTextEditor);
+  }
+);
 
 let disposables: vscode.Disposable[] = [];
 export function watchForChanges(git: GitAPI): vscode.Disposable {
   const commitAfterDelay = debouncedCommit(git.repositories[0]);
   disposables.push(git.repositories[0].state.onDidChange(commitAfterDelay));
-
-  ensureStatusBarItem();
-
-  disposables.push(
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor && matches(editor.document.uri)) {
-        statusBarItem?.show();
-      } else {
-        statusBarItem?.hide();
-      }
-    })
-  );
-
-  if (
-    vscode.window.activeTextEditor &&
-    matches(vscode.window.activeTextEditor.document.uri)
-  ) {
-    statusBarItem?.show();
-  } else {
-    statusBarItem?.hide();
-  }
-
-  disposables.push({
-    dispose: () => {
-      statusBarItem?.dispose();
-      statusBarItem = null;
-    },
-  });
 
   if (config.autoPush === "afterDelay") {
     const interval = setInterval(async () => {
@@ -297,22 +313,6 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
       dispose: () => clearInterval(interval),
     });
   }
-
-  const reactionDisposable = reaction(
-    () => [store.isPushing, store.isPulling],
-    () => {
-      const suffix = store.isPushing
-        ? " (Pushing...)"
-        : store.isPulling
-          ? " (Pulling...)"
-          : "";
-      statusBarItem!.text = `$(mirror)${suffix}`;
-    }
-  );
-
-  disposables.push({
-    dispose: reactionDisposable,
-  });
 
   if (config.pullOnOpen) {
     pullRepository(git.repositories[0]);

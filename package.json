@@ -3,8 +3,8 @@
   "displayName": "GitDoc",
   "publisher": "vsls-contrib",
   "icon": "images/icon.png",
-  "description": "Automatically commit/push/pull changes on save, so you can edit a Git repo like a multi-file, versioned document.",
-  "version": "0.2.3",
+  "description": "A continuous, frictionless, background-saving experience that intelligently commits your changes.",
+  "version": "0.2.4",
   "extensionKind": [
     "workspace"
   ],
@@ -38,6 +38,11 @@
       {
         "command": "gitdoc.enable",
         "title": "Enable",
+        "category": "GitDoc"
+      },
+      {
+        "command": "gitdoc.toggleStatusBarIcon",
+        "title": "Toggle Status Bar Icon Visibility",
         "category": "GitDoc"
       },
       {
@@ -95,12 +100,17 @@
         "gitdoc.autoPushDelay": {
           "type": "number",
           "default": 30000,
-          "markdownDescription": "Controls the delay in ms after which any commits are automatically pushed. Only applies when `GitDoc: Auto Push` is set to `afterDelay`."
+          "description": "Specifies the number of milliseconds to wait before automatically pushing changes to a remote branch. This setting only applies when 'GitDoc > Auto Push' is set to 'After Delay'."
+        },
+        "gitdoc.alwaysShowStatusBarIcon": {
+          "type": "boolean",
+          "default": false,
+          "description": "Specifies whether to always show the status bar icon, even when GitDoc is disabled. When true, the icon appearance will change to indicate whether GitDoc is enabled or disabled."
         },
         "gitdoc.commitMessageFormat": {
           "type": "string",
-          "default": "ff",
-          "markdownDescription": "Specifies the date/time format string (using Luxon) to use when generating auto-commit messages. Views [the docs](https://moment.github.io/luxon/#/formatting?id=table-of-tokens) for more details."
+          "default": "lll",
+          "markdownDescription": "Specifies the format to use for auto-generated commit messages. This setting only applies when `GitDoc > AI: Enabled` is set to `false`. By default, it uses the [Luxon date format](https://moment.github.io/luxon/#/formatting)."
         },
         "gitdoc.commitValidationLevel": {
           "type": "string",
@@ -195,6 +205,10 @@
         {
           "command": "gitdoc.enable",
           "when": "gitOpenRepositoryCount != 0 && !gitdoc:enabled"
+        },
+        {
+          "command": "gitdoc.toggleStatusBarIcon",
+          "when": "gitOpenRepositoryCount != 0"
         },
         {
           "command": "gitdoc.restoreVersion",
