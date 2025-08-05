@@ -32,38 +32,49 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("gitdoc.enabled") ||
+      if (
+        e.affectsConfiguration("gitdoc.enabled") ||
         e.affectsConfiguration("gitdoc.excludeBranches") ||
         e.affectsConfiguration("gitdoc.autoCommitDelay") ||
-        e.affectsConfiguration("gitdoc.filePattern")) {
+        e.affectsConfiguration("gitdoc.filePattern")
+      ) {
         checkEnabled(git);
       }
     })
   );
 }
 
-let watcher: vscode.Disposable | null;
+let watchers: vscode.Disposable[] = [];
 async function checkEnabled(git: GitAPI) {
-  if (watcher) {
-    watcher.dispose();
-    watcher = null;
+  // Dispose all existing watchers
+  watchers.forEach((watcher) => watcher.dispose());
+  watchers = [];
+
+  if (git.repositories.length === 0 || !store.enabled) {
+    updateContext(false, false);
+    return;
   }
 
-  let branchName = git.repositories[0]?.state?.HEAD?.name;
+  // Check if any repository has a valid branch and isn't excluded
+  let enabled = false;
+  for (const repository of git.repositories) {
+    let branchName = repository.state?.HEAD?.name;
 
-  if (!branchName) {
-    const refs = await git.repositories[0]?.getRefs();
-    branchName = refs?.find((ref) => ref.type === RefType.Head)?.name;
+    if (!branchName) {
+      const refs = await repository.getRefs();
+      branchName = refs?.find((ref) => ref.type === RefType.Head)?.name;
+    }
+
+    if (branchName && !config.excludeBranches.includes(branchName)) {
+      enabled = true;
+      break;
+    }
   }
-
-  const enabled =
-    git.repositories.length > 0 &&
-    store.enabled && !!branchName && !config.excludeBranches.includes(branchName);
 
   updateContext(enabled, false);
 
   if (enabled) {
-    watcher = watchForChanges(git);
+    watchers.push(watchForChanges(git));
   }
 }
 
@@ -71,7 +82,8 @@ export async function deactivate() {
   if (store.enabled && config.commitOnClose) {
     const git = await getGitApi();
     if (git && git.repositories.length > 0) {
-      return commit(git.repositories[0]);
+      // Commit changes in all repositories
+      await Promise.all(git.repositories.map((repo) => commit(repo)));
     }
   }
 }

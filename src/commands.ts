@@ -25,23 +25,30 @@ export function registerCommands(context: vscode.ExtensionContext) {
       return;
     }
 
-    const path = vscode.workspace.asRelativePath(
-      vscode.window.activeTextEditor.document.uri.path
-    );
+    const uri = vscode.window.activeTextEditor.document.uri;
+    const path = vscode.workspace.asRelativePath(uri.path);
 
     const git = await getGitApi();
+    const repository = git?.getRepository(uri);
+    
+    if (!repository) {
+      vscode.window.showErrorMessage("No git repository found for this file");
+      return;
+    }
 
     // @ts-ignore
-    await git?.repositories[0].repository.repository.checkout(item.ref, [
-      path,
-    ]);
+    await repository.repository.repository.checkout(item.ref, [path]);
 
     // TODO: Look into why the checkout
     // doesn't trigger the watcher.
-    commit(git?.repositories[0]!);
+    commit(repository);
   });
 
   registerCommand("squashVersions", async (item: GitTimelineItem) => {
+    if (!vscode.window.activeTextEditor) {
+      return;
+    }
+
     const message = await vscode.window.showInputBox({
       prompt: "Enter the name to give to the new squashed version",
       value: item.message,
@@ -49,29 +56,58 @@ export function registerCommands(context: vscode.ExtensionContext) {
 
     if (message) {
       const git = await getGitApi();
+      const repository = git?.getRepository(vscode.window.activeTextEditor.document.uri);
+      
+      if (!repository) {
+        vscode.window.showErrorMessage("No git repository found for this file");
+        return;
+      }
+
       // @ts-ignore
-      await git?.repositories[0].repository.reset(`${item.ref}~1`);
-      await commit(git?.repositories[0]!, message);
+      await repository.repository.reset(`${item.ref}~1`);
+      await commit(repository, message);
     }
   });
 
   registerCommand("undoVersion", async (item: GitTimelineItem) => {
+    if (!vscode.window.activeTextEditor) {
+      return;
+    }
+
     const git = await getGitApi();
+    const repository = git?.getRepository(vscode.window.activeTextEditor.document.uri);
+    
+    if (!repository) {
+      vscode.window.showErrorMessage("No git repository found for this file");
+      return;
+    }
 
     // @ts-ignore
-    await git?.repositories[0].repository.repository.run([
+    await repository.repository.repository.run([
       "revert",
       "-n", // Tell Git not to create a commit, so that we can make one with the right message format
       item.ref,
     ]);
 
-    await commit(git?.repositories[0]!);
+    await commit(repository);
   });
 
   registerCommand("commit", async () => {
     const git = await getGitApi();
-    if (git && git.repositories.length > 0) {
-      await commit(git.repositories[0]);
+    if (!git || git.repositories.length === 0) {
+      return;
     }
+
+    if (vscode.window.activeTextEditor) {
+      // Commit the repository containing the active file
+      const repository = git.getRepository(vscode.window.activeTextEditor.document.uri);
+      if (repository) {
+        await commit(repository);
+        return;
+      }
+    }
+
+    // Fallback: commit all repositories
+    await Promise.all(git.repositories.map(repo => commit(repo)));
   });
 }
