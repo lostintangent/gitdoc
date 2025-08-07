@@ -214,7 +214,7 @@ function debounce(fn: Function, delay: number) {
   };
 }
 
-const commitMap = new Map();
+const commitMap = new Map<Repository, () => void>();
 function debouncedCommit(repository: Repository) {
   if (!commitMap.has(repository)) {
     commitMap.set(
@@ -223,7 +223,7 @@ function debouncedCommit(repository: Repository) {
     );
   }
 
-  return commitMap.get(repository);
+  return commitMap.get(repository)!;
 }
 
 let statusBarItem: vscode.StatusBarItem | null = null;
@@ -244,8 +244,11 @@ export function ensureStatusBarItem() {
 
 let disposables: vscode.Disposable[] = [];
 export function watchForChanges(git: GitAPI): vscode.Disposable {
-  const commitAfterDelay = debouncedCommit(git.repositories[0]);
-  disposables.push(git.repositories[0].state.onDidChange(commitAfterDelay));
+  // Set up change listeners for all repositories
+  git.repositories.forEach(repository => {
+    const commitAfterDelay = debouncedCommit(repository);
+    disposables.push(repository.state.onDidChange(commitAfterDelay));
+  });
 
   ensureStatusBarItem();
 
@@ -277,7 +280,7 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
 
   if (config.autoPush === "afterDelay") {
     const interval = setInterval(async () => {
-      pushRepository(git.repositories[0]);
+      await Promise.all(git.repositories.map(repo => pushRepository(repo)));
     }, config.autoPushDelay);
 
     disposables.push({
@@ -288,10 +291,9 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   }
 
   if (config.autoPull === "afterDelay") {
-    const interval = setInterval(
-      async () => pullRepository(git.repositories[0]),
-      config.autoPullDelay
-    );
+    const interval = setInterval(async () => {
+      await Promise.all(git.repositories.map(repo => pullRepository(repo)));
+    }, config.autoPullDelay);
 
     disposables.push({
       dispose: () => clearInterval(interval),
@@ -315,7 +317,7 @@ export function watchForChanges(git: GitAPI): vscode.Disposable {
   });
 
   if (config.pullOnOpen) {
-    pullRepository(git.repositories[0]);
+    git.repositories.forEach(repo => pullRepository(repo));
   }
 
   return {
